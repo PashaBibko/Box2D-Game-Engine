@@ -1,24 +1,28 @@
-#include <SFML/Graphics.hpp>
-#include <Box2D/Box2D.h>
+#include <util/util.h>
+#include <engine/engine.h>
+
+class CustomController : public EngineController
+{
+	private:
+		std::shared_ptr<Entity> entity;
+
+	public:
+		void onInit() override
+		{
+			entity = GraphicEntity::create(Vec2{100, 100}, Vec2{100, 100});
+		}
+
+		void onRender() override
+		{
+			entity->render();
+		}
+};
 
 int main()
 {
-	sf::RenderWindow window (sf::VideoMode(800, 600), "SFML works!");
-	b2World* world = new b2World(b2Vec2(0.0f, 9.8f));
+	Engine instance(Vec2{ 800, 600 }, std::make_unique<CustomController>());
 
-	while (window.isOpen())
-	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed)
-				window.close();
-		}
-
-		window.clear();
-
-		window.display();
-	}
+	BASIC_LOOP(instance)
 
 	return 0;
 }
