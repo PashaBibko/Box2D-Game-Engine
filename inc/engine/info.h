@@ -15,8 +15,8 @@ struct EngineInfo
 
 	static bool windowOpen;
 
-	static std::unordered_map<sf::Keyboard::Key, short> keyMap;
-	static std::unordered_map<sf::Mouse::Button, short> mouseMap;
+	static std::unordered_map<sf::Keyboard::Key, long> keyMap;
+	static std::unordered_map<sf::Mouse::Button, long> mouseMap;
 
 	static Vec2 mousePos;
 
