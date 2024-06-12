@@ -9,9 +9,9 @@ bool inMap(const std::unordered_map<IDENTIFIER, VALUE>& map, const IDENTIFIER& k
 }
 
 template<typename MAP, typename FUNCTION>
-void callFuncOnMap(MAP& map, const FUNCTION func)
+void callFuncOnMap(MAP& map, const FUNCTION& func)
 {
-	for (auto item : map)
+	for (auto& item : map)
 	{
 		func(item.first, item.second);
 	}

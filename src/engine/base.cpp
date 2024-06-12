@@ -11,8 +11,8 @@ std::shared_ptr<b2World> EngineInfo::world = nullptr;
 
 bool EngineInfo::windowOpen = false;
 
-std::unordered_map<sf::Keyboard::Key, short> EngineInfo::keyMap;
-std::unordered_map<sf::Mouse::Button, short> EngineInfo::mouseMap;
+std::unordered_map<sf::Keyboard::Key, long> EngineInfo::keyMap;
+std::unordered_map<sf::Mouse::Button, long> EngineInfo::mouseMap;
 
 Vec2 EngineInfo::mousePos;
 
@@ -39,7 +39,7 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 	EngineInfo::windowOpen = EngineInfo::window->isOpen();
 
 	// Creates the box2d world
-	EngineInfo::world = std::make_shared<b2World>(Vec2(0.0f));
+	EngineInfo::world = std::make_shared<b2World>(Vec2(0.0f, 5.0f));
 
 	// Calls the init controller function if it exists
 	if (this->controller != nullptr)
@@ -74,11 +74,10 @@ void Engine::update()
 
 	// ----- Updates the keyMap and mouseMap ----- //
 
-	callFuncOnMap (EngineInfo::keyMap, [](sf::Keyboard::Key key, short& value)
-		{ sf::Keyboard::isKeyPressed(key) ? ((value < 0) ? value = 0 : value++) : ((value > 0) ? value = 0 : value--); });
+	#define MIDPOINT 0 // Can change (no logical reason why it should not be 0)
 
-	callFuncOnMap (EngineInfo::mouseMap, [](sf::Mouse::Button button, short& value)
-		{ sf::Mouse::isButtonPressed(button) ? ((value < 0) ? value = 0 : value++) : ((value > 0) ? value = 0 : value--); });
+	callFuncOnMap(EngineInfo::keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
+	callFuncOnMap(EngineInfo::mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 
 	// ----- Updates the b2World ----- //
 
