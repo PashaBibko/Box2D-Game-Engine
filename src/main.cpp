@@ -8,7 +8,7 @@ class CustomController : public EngineController
 		std::shared_ptr<Entity> object;
 
 	public:
-		void onInit() override
+		void init() override
 		{
 			GraphicDef g_def;
 			g_def.size = Vec2{2, 2};
@@ -41,14 +41,14 @@ class CustomController : public EngineController
 			object = PhysicalEntity::create(p_def);
 		}
 
-		void onRender() override
+		void render() override
 		{
 			entity->render();
 
 			object->render();
 		}
 
-		void onUpdate() override
+		void update() override
 		{
 			sf::View oldView = EngineInfo::window->getView();
 

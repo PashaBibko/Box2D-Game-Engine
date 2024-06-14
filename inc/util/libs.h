@@ -1,6 +1,8 @@
 #pragma once
 
-// External Libraries //
+// Includes all libraries and headers needed for the project
+
+// External Libraries
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -9,7 +11,7 @@
 
 #include <Box2D/Box2D.h>
 
-// Standard Libraries //
+// Standard Libraries
 
 #include <unordered_map>
 #include <iostream>
