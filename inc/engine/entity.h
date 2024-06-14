@@ -5,45 +5,6 @@
 #include <util/libs.h>
 #include <util/vec2.h>
 
-enum class EntityType
-{
-	GRAPHIC_ONLY,
-	GRAPHIC_PHYSICAL,
-
-	UNDEFINED
-};
-
-class Entity
-{
-	public:
-		// -- Static members -- //
-		static std::vector<std::shared_ptr<Entity>> instances;
-
-		// -- Virtual functions -- //
-
-		virtual void update();
-
-		// -- Variables -- //
-
-		EntityType type = EntityType::UNDEFINED;
-
-		Vec2 size;
-		Vec2 position;
-
-	public:
-		// -- Virtual functions -- //
-
-		virtual void render();
-
-		// -- Functions -- //
-
-		Vec2 getSize();
-		Vec2 getPosition();
-
-		void setSize(Vec2 size);
-		void setPosition(Vec2 position);
-};
-
 struct GraphicDef
 {
 	Vec2 size;
@@ -57,11 +18,22 @@ class GraphicEntity : public Entity
 
 		sf::RectangleShape drawable;
 
+		GraphicEntity(bool call)
+		{
+			if (call == false)
+				return;
+
+			renderStates.transform.scale(Vec2(EngineInfo::scale));
+		}
+
 	public:
+		// -- Constructor -- //
+		GraphicEntity() : GraphicEntity(true) {}
+
 		// -- Functions -- //
 		void render() override
 		{
-			EngineInfo::window->draw(drawable);
+			EngineInfo::window->draw(drawable, renderStates);
 		}
 
 		// -- Static Functions -- //
@@ -89,9 +61,9 @@ struct PhysicalDef
 
 	b2BodyType bodyType;
 
-	std::vector<Vec2> vertices;
+	std::vector<std::vector<Vec2>> fixtureVertices;
 
-	PhysicalDef() : bodyType(b2BodyType::b2_staticBody) { vertices.resize(0); }
+	PhysicalDef() : bodyType(b2BodyType::b2_staticBody) { fixtureVertices.resize(0); }
 };
 
 class PhysicalEntity : public GraphicEntity
@@ -103,24 +75,37 @@ class PhysicalEntity : public GraphicEntity
 
 		std::vector<std::shared_ptr<b2Shape>> shapes;
 
+		PhysicalEntity(bool call) : GraphicEntity(false)
+		{
+			if (call == false)
+				return;
+
+			renderStates.transform.scale(Vec2(EngineInfo::scale));
+		}
+
 	public:
+		// -- Constructor -- //
+		PhysicalEntity() : PhysicalEntity(true) {}
+
 		// -- Functions -- //
 
 		void update() override
 		{
 			position = Vec2(body->GetPosition().x, body->GetPosition().y);
+
+			drawable.setPosition(position);
 		}
 
 		void render() override
 		{
-			EngineInfo::window->draw(drawable);
+			EngineInfo::window->draw(drawable, renderStates);
 
-			for (int i = 0; i < shapes.size(); i++)
+			for (size_t i = 0; i < shapes.size(); i++)
 			{
-				std::shared_ptr<b2PolygonShape>shape = std::static_pointer_cast<b2PolygonShape>(shapes[i]);
+				b2PolygonShape* shape = static_cast<b2PolygonShape*>(shapes[i].get());
 				sf::VertexArray hitbox(sf::LineStrip, shape->m_count + 1);
 
-				for (int j = 0; j < shape->m_count + 1; j++)
+				for (int32 j = 0; j < shape->m_count + 1; j++)
 				{
 					if (j == shape->m_count)
 						hitbox[shape->m_count].position = Vec2(body->GetWorldPoint(shape->m_vertices[0]));
@@ -131,14 +116,8 @@ class PhysicalEntity : public GraphicEntity
 					hitbox[j].color = sf::Color::Red;
 				}
 
-				EngineInfo::window->draw(hitbox);
+				EngineInfo::window->draw(hitbox, renderStates);
 			}
-
-			sf::VertexArray line(sf::LineStrip, 2);
-			line[0].position = position;
-			line[1].position = Vec2(250, 250);
-
-			EngineInfo::window->draw(line);
 		}
 
 		// -- Static Functions -- //
@@ -156,7 +135,7 @@ class PhysicalEntity : public GraphicEntity
 			instance->drawable.setSize(def.size);
 			instance->drawable.setPosition(def.position);
 
-			//
+			// Creats the body
 
 			b2BodyDef bodyDef;
 			bodyDef.type = def.bodyType;
@@ -164,27 +143,34 @@ class PhysicalEntity : public GraphicEntity
 
 			instance->body = EngineInfo::world->CreateBody(&bodyDef);
 
-			b2PolygonShape shape;
-			b2Vec2* vertices = new b2Vec2[def.vertices.size()];
+			// Creates the shapes for the fixtures
 
-			if (def.vertices.size() == 0)
-				throw std::runtime_error("PhysicalEntity::create: def.vertices.size() == 0");
+			for (size_t i = 0; i < def.fixtureVertices.size(); i++)
+			{
+				b2PolygonShape shape;
+				b2Vec2* vertices = new b2Vec2[def.fixtureVertices[i].size()];
 
-			for (size_t i = 0; i < def.vertices.size(); i++)
-				vertices[i] = def.vertices[i];
+				for (size_t j = 0; j < def.fixtureVertices[i].size(); j++)
+					vertices[j] = def.fixtureVertices[i][j];
 
-			shape.Set(vertices, def.vertices.size());
-			delete[] vertices;
+				shape.Set(vertices, def.fixtureVertices[i].size());
+				delete[] vertices;
 
-			instance->shapes.push_back(std::make_shared<b2PolygonShape>(shape));
+				instance->shapes.push_back(std::make_shared<b2PolygonShape>(shape));
+			}
 
-			b2FixtureDef fixtureDef;
-			fixtureDef.shape = instance->shapes[0].get();
-			fixtureDef.density = 1.0f;
-			fixtureDef.friction = 0.0f;
-			fixtureDef.restitution = 0.0f;
+			// Creates the fixtures
 
-			instance->body->CreateFixture(&fixtureDef);
+			for (size_t i = 0; i < def.fixtureVertices.size(); i++)
+			{
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = instance->shapes[i].get();
+				fixtureDef.density = 1.0f;
+				fixtureDef.friction = 0.0f;
+				fixtureDef.restitution = 0.0f;
+
+				instance->body->CreateFixture(&fixtureDef);
+			}
 
 			return instance;
 		}

@@ -20,6 +20,8 @@ struct EngineInfo
 
 	static Vec2 mousePos;
 
+	static const float scale;
+
 	#if DEBUG
 
 	static bool showHitboxes;

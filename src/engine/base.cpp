@@ -16,6 +16,8 @@ std::unordered_map<sf::Mouse::Button, long> EngineInfo::mouseMap;
 
 Vec2 EngineInfo::mousePos;
 
+const float EngineInfo::scale = 50.0f;
+
 #if DEBUG
 
 bool EngineInfo::showHitboxes = false;
@@ -85,6 +87,11 @@ void Engine::update()
 	#define POSITION_ITERATIONS 3
 
 	EngineInfo::world->Step(1.0f / 60.0f, 8, 3);
+
+	// ----- Calls the update functions of all entities ----- //
+
+	for (std::shared_ptr<Entity> entity : Entity::instances)
+		entity->update();
 
 	// Calls the update controller function if it exists
 	if (controller != nullptr)
