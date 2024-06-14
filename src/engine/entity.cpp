@@ -125,7 +125,7 @@ std::shared_ptr<GraphicEntity> GraphicEntity::create(GraphicDef def)
 	instance->position = def.position;
 
 	// Sets the drawable object to the parameters in the def struct
-	instance->drawable.setSize(def.size);
+	instance->drawable.setHalfSize(def.size);
 	instance->drawable.setPosition(def.position);
 
 	// Returns the instance
@@ -148,7 +148,7 @@ std::shared_ptr<PhysicalEntity> PhysicalEntity::create(PhysicalDef def)
 	instance->position = def.position;
 
 	// Sets the drawable object to the parameters in the def struct
-	instance->drawable.setSize(def.size);
+	instance->drawable.setHalfSize(def.size);
 	instance->drawable.setPosition(def.position);
 
 	// Creates the body and sets the position and type

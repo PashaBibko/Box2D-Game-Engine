@@ -1,5 +1,6 @@
 #pragma once
 
+#include <engine/drawRect.h>
 #include <engine/base.h>
 
 #include <util/libs.h>
@@ -39,7 +40,7 @@ class GraphicEntity : public Entity
 {
 	protected:
 		// Drawable object of the entity
-		sf::RectangleShape drawable;
+		drawRect drawable;
 
 		/*
 		* @brief True constructor of the class

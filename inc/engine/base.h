@@ -104,6 +104,10 @@ class EngineController
 		*/
 		void onUpdate();
 
+	protected:
+		// Static pointer to the engine
+		static Engine* engineInstance;
+
 	public:
 		/*
 		* @brief Default constructor. Should never be called
@@ -139,6 +143,10 @@ class EngineController
 */
 class Engine
 {
+	private:
+		// Count of the number of instances of the engine
+		static size_t instanceCount;
+
 	public:
 		// Unique pointer to the engine controller
 		std::unique_ptr<EngineController>controller;
@@ -161,6 +169,63 @@ class Engine
 		* @brief Function to render the engine. Automatically calls the controller onRender function
 		*/
 		void render();
+
+		/*
+		* @brief Function to check if a key or mouse button is pressed
+		* 
+		* @tparam INPUT_TYPE Type of input to check
+		* 
+		* @param input Input to check
+		*/
+		template <typename INPUT_TYPE>
+		bool isPressed(INPUT_TYPE input)
+		{
+			if constexpr (std::is_same<INPUT_TYPE, sf::Keyboard::Key>::value)
+			{
+				if (inMap(input, EngineInfo::keyMap))
+					return EngineInfo::keyMap[input] > 0;
+
+				else
+					return false;
+			}
+			
+			if constexpr (std::is_same<INPUT_TYPE, sf::Mouse::Button>::value)
+			{
+				if (inMap(input, EngineInfo::mouseMap))
+					return EngineInfo::mouseMap[input] > 0;
+
+				else
+					return false;
+			}
+			
+			throw std::invalid_argument("Invalid input type");
+		}
+
+		/*
+		*/
+		template <typename INPUT_TYPE>
+		long getKeyStateInfo(INPUT_TYPE input)
+		{
+			if constexpr (std::is_same<INPUT_TYPE, sf::Keyboard::Key>::value)
+			{
+				if (inMap(input, EngineInfo::keyMap))
+					return EngineInfo::keyMap[input];
+
+				else
+					return 0;
+			}
+
+			if constexpr (std::is_same<INPUT_TYPE, sf::Mouse::Button>::value)
+			{
+				if (inMap(input, EngineInfo::mouseMap))
+					return EngineInfo::mouseMap[input];
+
+				else
+					return 0;
+			}
+
+			throw std::invalid_argument("Invalid input type");
+		}
 };
 
 /*
