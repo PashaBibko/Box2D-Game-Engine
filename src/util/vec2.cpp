@@ -78,7 +78,7 @@ namespace std
 	// To string
 	string to_string(Vec2& vec)
 	{
-		return "(" + to_string(vec.x) + ", " + to_string(vec.y) + ")";
+		return to_string(vec.x) + " " + to_string(vec.y);
 	}
 
 	// Min function
@@ -93,7 +93,7 @@ namespace std
 		return Vec2(max(lhs.x, rhs.x), max(lhs.y, rhs.y));
 	}
 
-	// Floor function
+	// Floor function (rounds down)
 	Vec2 floor(Vec2& vec)
 	{
 		return Vec2(floor(vec.x), floor(vec.y));

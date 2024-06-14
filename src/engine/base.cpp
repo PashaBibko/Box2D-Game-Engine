@@ -16,11 +16,43 @@ std::unordered_map<sf::Mouse::Button, long> EngineInfo::mouseMap;
 
 Vec2 EngineInfo::mousePos;
 
+const float EngineInfo::scale = 50.0f;
+
 #if DEBUG
 
 bool EngineInfo::showHitboxes = false;
 
 #endif
+
+// ----- EngineController Functions ----- //
+
+void EngineController::onInit()
+{
+	// Calls its onInit function
+	init();
+
+	// Calls the onInit function of the child controller if it exists
+	if (childController != nullptr)
+		childController->onInit();
+}
+void EngineController::onUpdate()
+{
+	// Calls its onUpdate function
+	update();
+
+	// Calls the onUpdate function of the child controller if it exists
+	if (childController != nullptr)
+		childController->onUpdate();
+}
+void EngineController::onRender()
+{
+	// Calls its onRender function
+	render();
+
+	// Calls the onRender function of the child controller if it exists
+	if (childController != nullptr)
+		childController->onRender();
+}
 
 // ----- Engine Functions ----- //
 
@@ -48,12 +80,12 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 
 void Engine::update()
 {
-	// ----- Checks window and b2World are not nullptrs ----- //
+	// Checks window and b2World are not nullptrs
 	
 	if (EngineInfo::window == nullptr || EngineInfo::world == nullptr)
 		throw std::runtime_error("EngineInfo::window or EngineInfo::world is nullptr");
 
-	// ----- Polls window events ----- //
+	// Polls window events
 
 	sf::Event event;
 
@@ -72,19 +104,24 @@ void Engine::update()
 		}
 	}
 
-	// ----- Updates the keyMap and mouseMap ----- //
+	// Updates the keyMap and mouseMap
 
 	#define MIDPOINT 0 // Can change (no logical reason why it should not be 0)
 
 	callFuncOnMap(EngineInfo::keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 	callFuncOnMap(EngineInfo::mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 
-	// ----- Updates the b2World ----- //
+	// Updates the b2World
 
 	#define VELOCITY_ITERATIONS 8
 	#define POSITION_ITERATIONS 3
 
 	EngineInfo::world->Step(1.0f / 60.0f, 8, 3);
+
+	// Calls the update functions of all entities
+
+	for (std::shared_ptr<Entity> entity : Entity::instances)
+		entity->update();
 
 	// Calls the update controller function if it exists
 	if (controller != nullptr)
@@ -93,7 +130,7 @@ void Engine::update()
 
 void Engine::render()
 {
-	// ----- Checks window is not nullptr ----- //
+	// Checks window is not nullptr
 	if (EngineInfo::window == nullptr)
 		throw std::runtime_error("EngineInfo::window is nullptr");
 

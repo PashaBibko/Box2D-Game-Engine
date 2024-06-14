@@ -2,12 +2,13 @@
 
 #include <util/libs.h>
 
+/*
+* @brief A simple 2D vector class
+*/
 struct Vec2
 {
 	// Member vars
 	float x, y;
-
-	// ----- Constructors ----- // 
 
 	// Simple constructors
 	Vec2() : x(0), y(0) {}
@@ -26,8 +27,6 @@ struct Vec2
 	Vec2 (b2Vec2 vec) : x(vec.x), y(vec.y) {}
 	operator b2Vec2() { return b2Vec2(x, y); }
 
-	// ----- Void Functions ----- //
-
 	// Sets the vector to zero
 	void setZero() { x = 0; y = 0; }
 
@@ -45,16 +44,12 @@ struct Vec2
 		y = std::numeric_limits<float>::min();
 	}
 
-	// ----- Output Functions ----- //
-
 	// Gets the length of the vector
 	float length() { return sqrt(x * x + y * y); }
 
 	// Gets the squared length of the vector (useful for performance)
 	float lengthSquared() { return x * x + y * y; }
 };
-
-// ----- Operator Overloads ----- //
 
 // Addition operator overload
 

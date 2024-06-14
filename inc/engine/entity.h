@@ -5,187 +5,111 @@
 #include <util/libs.h>
 #include <util/vec2.h>
 
-enum class EntityType
-{
-	GRAPHIC_ONLY,
-	GRAPHIC_PHYSICAL,
-
-	UNDEFINED
-};
-
-class Entity
-{
-	public:
-		// -- Static members -- //
-		static std::vector<std::shared_ptr<Entity>> instances;
-
-		// -- Virtual functions -- //
-
-		virtual void update();
-
-		// -- Variables -- //
-
-		EntityType type = EntityType::UNDEFINED;
-
-		Vec2 size;
-		Vec2 position;
-
-	public:
-		// -- Virtual functions -- //
-
-		virtual void render();
-
-		// -- Functions -- //
-
-		Vec2 getSize();
-		Vec2 getPosition();
-
-		void setSize(Vec2 size);
-		void setPosition(Vec2 position);
-};
-
+/*
+* @brief Defintion class for GraphicEntity
+*/
 struct GraphicDef
 {
 	Vec2 size;
 	Vec2 position;
 };
 
+/*
+* @brief Defintion class for PhysicalEntity
+*/
+struct PhysicalDef : public GraphicDef
+{
+	// B2BodyType is an enum that defines the type of the body:
+	// - b2_staticBody: A body that does not move and is not affected by forces.
+	// - b2_kinematicBody: A body that does not move and is not affected by forces, but can be moved manually.
+	// - b2_dynamicBody: A body that moves and is affected by forces.
+	b2BodyType bodyType;
+
+	// A vector of vectors of Vec2 that defines the vertices of the fixtures.
+	std::vector<std::vector<Vec2>> fixtureVertices;
+
+	// Default constructor
+	PhysicalDef() : bodyType(b2BodyType::b2_staticBody) { fixtureVertices.resize(0); }
+};
+
+/*
+* @brief Base class for graphic entities
+*/
 class GraphicEntity : public Entity
 {
 	protected:
-		// -- Variables -- //
-
+		// Drawable object of the entity
 		sf::RectangleShape drawable;
 
+		/*
+		* @brief True constructor of the class
+		* 
+		* @param call: If the constructor was called by the constructor of the class
+		*/
+		GraphicEntity(bool call);
+
 	public:
-		// -- Functions -- //
-		void render() override
-		{
-			EngineInfo::window->draw(drawable);
-		}
+		/*
+		* @brief Default constructor of the class - Calls the true constructor with parameter true
+		*/
+		GraphicEntity() : GraphicEntity(true) {}
 
-		// -- Static Functions -- //
-		static std::shared_ptr<GraphicEntity> create(GraphicDef def)
-		{
-			instances.push_back(std::make_shared<GraphicEntity>());
-			std::shared_ptr<GraphicEntity> instance = std::static_pointer_cast<GraphicEntity>(instances.back());
+		/*
+		* @brief Renders the entity
+		*/
+		void render() override;
 
-			instance->type = EntityType::GRAPHIC_ONLY;
-
-			instance->size = def.size;
-			instance->position = def.position;
-
-			instance->drawable.setSize(def.size);
-			instance->drawable.setPosition(def.position);
-
-			return instance;
-		}
+		/*
+		* @brief Creates a graphic entity and adds it to the instances vector
+		* 
+		* @param Definition of the entity
+		* 
+		* @return A shared pointer to the created entity
+		*/
+		static std::shared_ptr<GraphicEntity> create(GraphicDef def);
 };
 
-struct PhysicalDef
-{
-	Vec2 size;
-	Vec2 position;
-
-	b2BodyType bodyType;
-
-	std::vector<Vec2> vertices;
-
-	PhysicalDef() : bodyType(b2BodyType::b2_staticBody) { vertices.resize(0); }
-};
-
+/*
+* @brief Base class for physical entities
+*/
 class PhysicalEntity : public GraphicEntity
 {
 	public:
-		// -- Variables -- //
-
+		// Pointer to the b2Body of the entity
 		b2Body* body = nullptr;
 
+		// Vector of shared pointers to the shapes of the fixtures
 		std::vector<std::shared_ptr<b2Shape>> shapes;
 
+		/*
+		* @brief True constructor of the class
+		* 
+		* @param call: If the constructor was called by the constructor of the class
+		*/
+		PhysicalEntity(bool call);
+
 	public:
-		// -- Functions -- //
+		/*
+		* @brief Default constructor of the class - Calls the true constructor with parameter true
+		*/
+		PhysicalEntity() : PhysicalEntity(true) {}
 
-		void update() override
-		{
-			position = Vec2(body->GetPosition().x, body->GetPosition().y);
-		}
+		/*
+		* @brief Overriden update function of the entity
+		*/
+		void update() override;
 
-		void render() override
-		{
-			EngineInfo::window->draw(drawable);
+		/*
+		* @brief Overriden render function of the entity
+		*/
+		void render() override;
 
-			for (int i = 0; i < shapes.size(); i++)
-			{
-				std::shared_ptr<b2PolygonShape>shape = std::static_pointer_cast<b2PolygonShape>(shapes[i]);
-				sf::VertexArray hitbox(sf::LineStrip, shape->m_count + 1);
-
-				for (int j = 0; j < shape->m_count + 1; j++)
-				{
-					if (j == shape->m_count)
-						hitbox[shape->m_count].position = Vec2(body->GetWorldPoint(shape->m_vertices[0]));
-
-					else
-						hitbox[j].position = Vec2(body->GetWorldPoint(shape->m_vertices[j]));
-
-					hitbox[j].color = sf::Color::Red;
-				}
-
-				EngineInfo::window->draw(hitbox);
-			}
-
-			sf::VertexArray line(sf::LineStrip, 2);
-			line[0].position = position;
-			line[1].position = Vec2(250, 250);
-
-			EngineInfo::window->draw(line);
-		}
-
-		// -- Static Functions -- //
-
-		static std::shared_ptr<PhysicalEntity> create(PhysicalDef def)
-		{
-			instances.push_back(std::make_shared<PhysicalEntity>());
-			std::shared_ptr<PhysicalEntity> instance = std::static_pointer_cast<PhysicalEntity>(instances.back());
-
-			instance->type = EntityType::GRAPHIC_PHYSICAL;
-
-			instance->size = def.size;
-			instance->position = def.position;
-
-			instance->drawable.setSize(def.size);
-			instance->drawable.setPosition(def.position);
-
-			//
-
-			b2BodyDef bodyDef;
-			bodyDef.type = def.bodyType;
-			bodyDef.position = def.position;
-
-			instance->body = EngineInfo::world->CreateBody(&bodyDef);
-
-			b2PolygonShape shape;
-			b2Vec2* vertices = new b2Vec2[def.vertices.size()];
-
-			if (def.vertices.size() == 0)
-				throw std::runtime_error("PhysicalEntity::create: def.vertices.size() == 0");
-
-			for (size_t i = 0; i < def.vertices.size(); i++)
-				vertices[i] = def.vertices[i];
-
-			shape.Set(vertices, def.vertices.size());
-			delete[] vertices;
-
-			instance->shapes.push_back(std::make_shared<b2PolygonShape>(shape));
-
-			b2FixtureDef fixtureDef;
-			fixtureDef.shape = instance->shapes[0].get();
-			fixtureDef.density = 1.0f;
-			fixtureDef.friction = 0.0f;
-			fixtureDef.restitution = 0.0f;
-
-			instance->body->CreateFixture(&fixtureDef);
-
-			return instance;
-		}
+		/*
+		* @brief Creates a physical entity and adds it to the instances vector
+		* 
+		* @param Definition of the entity
+		* 
+		* @return A shared pointer to the created entity
+		*/
+		static std::shared_ptr<PhysicalEntity> create(PhysicalDef def);
 };
