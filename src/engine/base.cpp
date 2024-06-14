@@ -24,6 +24,14 @@ bool EngineInfo::showHitboxes = false;
 
 #endif
 
+// Creates instances of static members of EngineController
+
+Engine* EngineController::engineInstance = nullptr;
+
+// Creates instances of static members of Engine
+
+size_t Engine::instanceCount = 0;
+
 // ----- EngineController Functions ----- //
 
 void EngineController::onInit()
@@ -58,8 +66,13 @@ void EngineController::onRender()
 
 Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, bool fullscreen) : controller(std::move(controller))
 {
-	// ----- Instializes the members of EngineInfo ----- //
-	
+	// Increments the instance count
+	Engine::instanceCount++;
+
+	// Throws an error if the instance count is not 1 and not allowed by the settings
+	if (Engine::instanceCount != 1 && !ALLOW_MULTIPLE_INSTANCES)
+		throw std::runtime_error("Multiple instances of the engine are not allowed");
+
 	// Creates the window
 	sf::VideoMode videoMode = (fullscreen) ? sf::VideoMode::getDesktopMode() : sf::VideoMode((int)windowSize.x, (int)windowSize.y);
 
@@ -72,6 +85,9 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 
 	// Creates the box2d world
 	EngineInfo::world = std::make_shared<b2World>(Vec2(0.0f, 5.0f));
+
+	// Sets the EngineController engine pointer to this
+	EngineController::engineInstance = this;
 
 	// Calls the init controller function if it exists
 	if (this->controller != nullptr)
