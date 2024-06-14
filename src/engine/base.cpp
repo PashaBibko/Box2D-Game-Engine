@@ -160,3 +160,41 @@ void Engine::render()
 	// Displays the window
 	EngineInfo::window->display();
 }
+
+long Engine::getInputInfo(sf::Keyboard::Key key)
+{
+	// Checks key is in the keyMap
+	if (EngineInfo::keyMap.find(key) == EngineInfo::keyMap.end())
+		return 0;
+
+	// Returns the value of the key in the keyMap
+	return EngineInfo::keyMap[key];
+}
+
+long Engine::getInputInfo(sf::Mouse::Button button)
+{
+	// Checks button is in the mouseMap
+	if (EngineInfo::mouseMap.find(button) == EngineInfo::mouseMap.end())
+		return 0;
+
+	// Returns the value of the button in the mouseMap
+	return EngineInfo::mouseMap[button];
+}
+
+void Engine::addInput(sf::Keyboard::Key key)
+{
+	// Adds the key to the keyMap if it is not already in it
+	if (!inMap(EngineInfo::keyMap, key))
+	{
+		EngineInfo::keyMap[key] = 0;
+	}
+}
+
+void Engine::addInput(sf::Mouse::Button button)
+{
+	// Adds the button to the mouseMap if it is not already in it
+	if (!inMap(EngineInfo::mouseMap, button))
+	{
+		EngineInfo::mouseMap[button] = 0;
+	}
+}

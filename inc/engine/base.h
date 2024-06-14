@@ -171,60 +171,80 @@ class Engine
 		void render();
 
 		/*
-		* @brief Function to check if a key or mouse button is pressed
-		* 
-		* @tparam INPUT_TYPE Type of input to check
-		* 
-		* @param input Input to check
+		* @brief Gets frames since held / frames held for
 		*/
-		template <typename INPUT_TYPE>
-		bool isPressed(INPUT_TYPE input)
-		{
-			if constexpr (std::is_same<INPUT_TYPE, sf::Keyboard::Key>::value)
-			{
-				if (inMap(input, EngineInfo::keyMap))
-					return EngineInfo::keyMap[input] > 0;
-
-				else
-					return false;
-			}
-			
-			if constexpr (std::is_same<INPUT_TYPE, sf::Mouse::Button>::value)
-			{
-				if (inMap(input, EngineInfo::mouseMap))
-					return EngineInfo::mouseMap[input] > 0;
-
-				else
-					return false;
-			}
-			
-			throw std::invalid_argument("Invalid input type");
-		}
+		long getInputInfo(sf::Keyboard::Key key);
 
 		/*
+		* @brief Gets frames since held / frames held for
 		*/
-		template <typename INPUT_TYPE>
-		long getKeyStateInfo(INPUT_TYPE input)
+		long getInputInfo(sf::Mouse::Button button);
+
+		/*
+		* @brief Function to check if a key is pressed
+		*/
+		bool isPressed(sf::Keyboard::Key key) { return getInputInfo(key) > 0; }
+
+		/*
+		* @brief Function to check if a mouse button is pressed
+		*/
+		bool isPressed(sf::Mouse::Button button) { return getInputInfo(button) > 0; }
+
+		/*
+		* @brief Function to check if a key is clicked (first frame pressed)
+		*/
+		bool isClicked(sf::Keyboard::Key key) { return getInputInfo(key) == 1; }
+
+		/*
+		* @brief Function to check if a mouse button is clicked (first frame pressed)
+		*/
+		bool isClicked(sf::Mouse::Button button) { return getInputInfo(button) == 1; }
+
+		/*
+		* @brief Function to add a keybord key to the engine
+		* 
+		* @param key Key to add
+		*/
+		void addInput(sf::Keyboard::Key key);
+
+		/*
+		* @brief Function to add a mouse button to the engine
+		* 
+		* @param button Mouse button to add
+		*/
+		void addInput(sf::Mouse::Button button);
+
+		/*
+		* @brief Empty function to avoid recursion errors
+		*/
+		void addInputs() {}
+
+		/*
+		* @brief Function to add multiple inputs to the engine
+		*/
+		template <typename FIRST_INPUT_TYPE, typename... Args>
+		void addInputs(FIRST_INPUT_TYPE firstInput, Args... args)
 		{
-			if constexpr (std::is_same<INPUT_TYPE, sf::Keyboard::Key>::value)
-			{
-				if (inMap(input, EngineInfo::keyMap))
-					return EngineInfo::keyMap[input];
+			// To whom it may concern:
+			// Yes I know I should be putting in into the .cpp file
+			// but whenever I do that I get a linker error (shown below):
+			// 
+			// 1> main.obj : error LNK2019: unresolved external symbol "public: void __thiscall Engine::addInputs<enum sf::Keyboard::Key,enum sf::Keyboard::Key,enum sf::Keyboard::Key,enum sf::Keyboard::Key,enum sf::Mouse::Button>(enum sf::Keyboard::Key,enum sf::Keyboard::Key,enum sf::Keyboard::Key,enum sf::Keyboard::Key,enum sf::Mouse::Button)" (??$addInputs@W4Key@Keyboard@sf@@W4123@W4123@W4123@W4Button@Mouse@3@@Engine@@QAEXW4Key@Keyboard@sf@@000W4Button@Mouse@3@@Z) referenced in function _main
+			// 1> C:\Users\Pasha\source\scripts\SFML - Template\Debug\Box2D - Game - Engine.exe : fatal error LNK1120 : 1 unresolved externals
+			// 1> Done building project "Box2D-Game-Engine.vcxproj" -- FAILED.
 
-				else
-					return 0;
-			}
+			// Checks the type of the first input is valid
+			static_assert (
+				std::is_same<FIRST_INPUT_TYPE, sf::Keyboard::Key>::value ||
+				std::is_same<FIRST_INPUT_TYPE, sf::Mouse::Button>::value,
+				"Invalid input type"
+			);
 
-			if constexpr (std::is_same<INPUT_TYPE, sf::Mouse::Button>::value)
-			{
-				if (inMap(input, EngineInfo::mouseMap))
-					return EngineInfo::mouseMap[input];
+			// Add the first input
+			addInput(firstInput);
 
-				else
-					return 0;
-			}
-
-			throw std::invalid_argument("Invalid input type");
+			// Recursively add the rest of the inputs
+			addInputs(args...);
 		}
 };
 

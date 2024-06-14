@@ -10,35 +10,39 @@
 #endif
 
 /*
-* @brief Contains all the important variables that are used throughout the engine
+* @brief Static class that contains all the important variables that are used throughout the engine
 */
 struct EngineInfo
 {
-	// The window that the game is being rendered to
-	static std::shared_ptr<sf::RenderWindow> window;
+	private:
+		friend class Engine;
 
-	// The b2World the game is simulating
-	static std::shared_ptr<b2World> world;
+		// Map of all the keys that are currently being pressed
+		static std::unordered_map<sf::Keyboard::Key, long> keyMap;
 
-	// Is the current window open
-	static bool windowOpen;
+		// Map of all the mouse buttons that are currently being pressed
+		static std::unordered_map<sf::Mouse::Button, long> mouseMap;
 
-	// Map of all the keys that are currently being pressed
-	static std::unordered_map<sf::Keyboard::Key, long> keyMap;
+	public:
+		// The window that the game is being rendered to
+		static std::shared_ptr<sf::RenderWindow> window;
 
-	// Map of all the mouse buttons that are currently being pressed
-	static std::unordered_map<sf::Mouse::Button, long> mouseMap;
+		// The b2World the game is simulating
+		static std::shared_ptr<b2World> world;
 
-	// The current mouse position
-	static Vec2 mousePos;
+		// Is the current window open
+		static bool windowOpen;
 
-	// Constant for converting between pixels and meters
-	static const float scale;
+		// The current mouse position
+		static Vec2 mousePos;
 
-	#if DEBUG
+		// Constant for converting between pixels and meters
+		static const float scale;
 
-	// Debug variable for showing hitboxes
-	static bool showHitboxes;
+		#if DEBUG
 
-	#endif
+		// Debug variable for showing hitboxes
+		static bool showHitboxes;
+
+		#endif
 };
