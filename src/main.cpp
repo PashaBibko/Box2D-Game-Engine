@@ -1,6 +1,8 @@
 #include <util/util.h>
 #include <engine/engine.h>
 
+#include <json.hpp>
+
 class CustomController : public EngineController
 {
 	private:
@@ -22,7 +24,7 @@ class CustomController : public EngineController
 				Vec2{5, 1},
 				Vec2{-5, 1}
 			};
-
+			
 			platform = PhysicalEntity::create(p_def1);
 
 			//
@@ -56,22 +58,22 @@ class CustomController : public EngineController
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			{
-				view.move(1.0f, 0);
+				view.move(-2.0f, 0);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 			{
-				view.move(-1.0f, 0);
+				view.move(2.0f, 0);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 			{
-				view.move(0, 1.0f);
+				view.move(0, -2.0f);
 			}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 			{
-				view.move(0, -1.0f);
+				view.move(0, 2.0f);
 			}
 
 			EngineInfo::window->setView(view);

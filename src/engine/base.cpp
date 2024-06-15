@@ -64,6 +64,97 @@ void EngineController::onRender()
 		childController->onRender();
 }
 
+// ----- Contact Listener Functions ----- //
+
+#ifndef GET_USER_DATA
+#define GET_USER_DATA(contact) \
+B2CustomUserData* userDataA = reinterpret_cast<B2CustomUserData*>(contact->GetFixtureA()->GetBody()->GetUserData().pointer); \
+B2CustomUserData* userDataB = reinterpret_cast<B2CustomUserData*>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
+#else
+#error GET_USER_DATA already defined
+#endif
+
+void Engine::ContactListener::BeginContact(b2Contact* contact)
+{
+	GET_USER_DATA(contact);
+
+	// Adds the contact to the user data
+	B2CustomUserData::ContatctInfo info;
+	info.normal = Vec2(contact->GetManifold()->localNormal);
+
+	// Adds the contact to the user data of A (if it exists)
+	if (userDataA != nullptr)
+	{
+		info.collider = userDataB->owner;
+		userDataA->contacts.push_back(info);
+	}
+
+	// Adds the contact to the user data of B (if it exists)
+	if (userDataB != nullptr)
+	{
+		info.collider = userDataA->owner;
+		userDataB->contacts.push_back(info);
+	}
+}
+
+void Engine::ContactListener::EndContact(b2Contact* contact)
+{
+	GET_USER_DATA(contact);
+
+	// Removes the contact from the user data (if it can be found)
+	for (size_t i = 0; i < userDataA->contacts.size(); i++)
+	{
+		if (userDataA->contacts[i].collider == userDataB->owner)
+		{
+			userDataA->contacts.erase(userDataA->contacts.begin() + i);
+			break;
+		}
+	}
+	// Removes the contact from the user data (if it can be found)
+	for (size_t i = 0; i < userDataB->contacts.size(); i++)
+	{
+		if (userDataB->contacts[i].collider == userDataA->owner)
+		{
+			userDataB->contacts.erase(userDataB->contacts.begin() + i);
+			break;
+		}
+	}
+}
+
+void Engine::ContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
+{
+	GET_USER_DATA(contact);
+
+	// Updates the normals of the contacts within the user data for userDataA
+	for (size_t i = 0; i < userDataA->contacts.size(); i++)
+	{
+		if (userDataA->contacts[i].collider == userDataB->owner)
+		{
+			userDataA->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
+			userDataA->grounded = userDataA->grounded || std::abs(userDataA->contacts[i].normal.y) == 1.0f;
+			break;
+		}
+	}
+
+	// Updates the normals of the contacts within the user data for userDataB
+	for (size_t i = 0; i < userDataB->contacts.size(); i++)
+	{
+		if (userDataB->contacts[i].collider == userDataA->owner)
+		{
+			userDataB->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
+			userDataB->grounded = userDataB->grounded || std::abs(userDataB->contacts[i].normal.y) == 1.0f;
+			break;
+		}
+	}
+}
+
+void Engine::ContactListener::PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
+{
+	GET_USER_DATA(contact);
+}
+
+#undef GET_USER_DATA
+
 // ----- Engine Functions ----- //
 
 Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, bool fullscreen) : controller(std::move(controller))

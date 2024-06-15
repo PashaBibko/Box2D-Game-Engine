@@ -100,8 +100,6 @@ void PhysicalEntity::postStepUpdate()
 	// Gets the user data from the body
 	B2CustomUserData* userData = getB2UserData();
 
-	std::cout << userData->grounded << "\t" << userData->gravityStrength << std::endl;
-
 	// Sets the velocity to the velocity of the body
 	velocity = body->GetLinearVelocity();
 
