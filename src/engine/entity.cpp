@@ -271,3 +271,49 @@ std::shared_ptr<PhysicalEntity> PhysicalEntity::create(PhysicalDef def)
 	// Returns the instance
 	return instance;
 }
+
+// --------------- Def Create Functions --------------- //
+
+GraphicDef createDefOf(GraphicEntity* entity)
+{
+	// Creates a new GraphicDef object
+	GraphicDef def;
+
+	// Assigns the size and position of the entity to the def object
+	def.size = entity->size;
+	def.position = entity->position;
+
+	// Returns the def object
+	return def;
+}
+
+PhysicalDef createDefOf(PhysicalEntity* entity)
+{
+	// Creates a new PhysicalDef object
+	PhysicalDef def;
+
+	// Assigns the size and position of the entity to the def object
+	def.size = entity->size;
+	def.position = entity->position;
+
+	// Assigns the body type of the entity to the def object
+	def.bodyType = entity->body->GetType();
+
+	// Assigns the fixture vertices of the entity to the def object
+	for (int i = 0; i < entity->shapes.size(); i++)
+	{
+		// Creates a vector of the vertices
+		std::vector<Vec2> vertices;
+
+		// Gets the true pointer of the shape
+		b2PolygonShape* shape = static_cast<b2PolygonShape*>(entity->shapes[i].get());
+
+		for (int j = 0; j < shape->m_count; j++)
+			vertices.push_back(Vec2(shape->m_vertices[j]));
+
+		def.fixtureVertices.push_back(vertices);
+	}
+
+	// Returns the def object
+	return def;
+}

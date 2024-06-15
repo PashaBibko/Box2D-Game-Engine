@@ -42,6 +42,9 @@ struct PhysicalDef : public GraphicDef
 class GraphicEntity : public Entity
 {
 	protected:
+		// Friends the def creation function
+		friend GraphicDef createDefOf(GraphicEntity* entity);
+
 		// Drawable object of the entity
 		drawRect drawable;
 
@@ -81,6 +84,9 @@ class PhysicalEntity : public GraphicEntity
 	private:
 		// Friends the engine class to allow it to access it's private members
 		friend class Engine;
+		 
+		// Friends the def creation function
+		friend PhysicalDef createDefOf(PhysicalEntity* entity);
 
 		// Pointer to the b2Body of the entity
 		b2Body* body = nullptr;
@@ -162,3 +168,21 @@ class PhysicalEntity : public GraphicEntity
 		*/
 		static std::shared_ptr<PhysicalEntity> create(PhysicalDef def);
 };
+
+/*
+* @brief Creates a definition for a graphic entity
+* 
+* @param entity: Entity to create the definition for
+* 
+* @return Definition of the entity
+*/
+GraphicDef createDefOf(GraphicEntity* entity);
+
+/*
+* @brief Creates a definition for a physical entity
+* 
+* @param entity: Entity to create the definition for
+* 
+* @return Definition of the entity
+*/
+PhysicalDef createDefOf(PhysicalEntity* entity);

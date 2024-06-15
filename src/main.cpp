@@ -3,10 +3,14 @@
 
 #include <json.hpp>
 
+long counter = 0;
+
 class CustomController : public EngineController
 {
 	private:
-		std::shared_ptr<Entity> platform;
+		std::shared_ptr<Entity> platform1;
+		std::shared_ptr<Entity> platform2;
+
 		std::shared_ptr<Entity> player;
 
 	public:
@@ -25,13 +29,17 @@ class CustomController : public EngineController
 				Vec2{-5, 1}
 			};
 			
-			platform = PhysicalEntity::create(p_def1);
+			platform1 = PhysicalEntity::create(p_def1);
+
+			p_def1.position = Vec2{8, 0};
+
+			platform2 = PhysicalEntity::create(p_def1);
 
 			//
 
 			PhysicalDef p_def2;
 			p_def2.size = Vec2{1, 1};
-			p_def2.position = Vec2{8, 0};
+			p_def2.position = Vec2{8, 5};
 			p_def2.bodyType = b2_dynamicBody;
 
 			p_def2.fixtureVertices.resize(1);
@@ -48,7 +56,9 @@ class CustomController : public EngineController
 
 		void render() override
 		{
-			platform->render();
+			platform1->render();
+			platform2->render();
+
 			player->render();
 		}
 
@@ -56,31 +66,33 @@ class CustomController : public EngineController
 		{
 			sf::View view = EngineInfo::window->getView();
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			if (engineInstance->isPressed(sf::Keyboard::Left))
 			{
 				view.move(-2.0f, 0);
 			}
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			if (engineInstance->isPressed(sf::Keyboard::Right))
 			{
 				view.move(2.0f, 0);
 			}
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			if (engineInstance->isPressed(sf::Keyboard::Up))
 			{
 				view.move(0, -2.0f);
 			}
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			if (engineInstance->isPressed(sf::Keyboard::Down))
 			{
 				view.move(0, 2.0f);
 			}
 
 			EngineInfo::window->setView(view);
 
+			//
+
 			PhysicalEntity* playerPtr = dynamic_cast<PhysicalEntity*>(player.get());
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && playerPtr->getB2UserData()->grounded)
+			if (engineInstance->isPressed(sf::Keyboard::W) && playerPtr->getB2UserData()->grounded)
 			{
 				playerPtr->setYVelocity(-20);
 			}
@@ -90,6 +102,25 @@ class CustomController : public EngineController
 			newXVel = newXVel + (engineInstance->isPressed(sf::Keyboard::D) * 5);
 
 			playerPtr->setXVelocity(newXVel);
+
+			// THE CODE BELOW DOES NOT WORK
+			// 
+			// FOR SEMI-GOOD RESULTS USE engineInstance->isClicked(sf::Keyboard::R)
+			// FOR FUNNY RESULTS USE     engineInstance->isPressed(sf::Keyboard::R)
+
+			if (engineInstance->isPressed(sf::Keyboard::R))
+			{
+				PhysicalDef newPlayerDef;
+
+				PhysicalEntity* playerPtr = dynamic_cast<PhysicalEntity*>(player.get());
+
+				newPlayerDef = createDefOf(playerPtr);
+
+				player = PhysicalEntity::create(newPlayerDef);
+
+				counter++;
+				std::cout << "Player recreated: " << counter << " \n";
+			}
 		}
 };
 
@@ -106,7 +137,9 @@ int main()
 		sf::Keyboard::W,
 		sf::Keyboard::A,
 		sf::Keyboard::S,
-		sf::Keyboard::D
+		sf::Keyboard::D,
+
+		sf::Keyboard::R
 	);
 
 	BASIC_LOOP(instance);
