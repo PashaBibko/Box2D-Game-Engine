@@ -1,9 +1,12 @@
 # Box2D Game Engine
 
-Simple 2D game engine built using:
+### Languages Used:
+* C++
+
+### Libraries Used:
 * Box2D
 * SFML
-* OpenGL (later)
+* OpenGL (not included yet)
 * Nlohamn JSON
 
 ## Comit Hashtag Meanings
