@@ -91,6 +91,12 @@ class PhysicalEntity : public GraphicEntity
 		// Velocity of the entity
 		Vec2 velocity;
 
+		/**/
+		void preStepUpdate() override;
+
+		/**/
+		void postStepUpdate() override;
+
 		/*
 		* @brief True constructor of the class
 		* 
@@ -108,11 +114,6 @@ class PhysicalEntity : public GraphicEntity
 		* @brief Destructor of the class - Destroys the userData of the b2Body to avoid memory leaks
 		*/
 		~PhysicalEntity();
-
-		/*
-		* @brief Overriden update function of the entity
-		*/
-		void update() override;
 
 		/*
 		* @brief Overriden render function of the entity
@@ -160,31 +161,4 @@ class PhysicalEntity : public GraphicEntity
 		* @return A shared pointer to the created entity
 		*/
 		static std::shared_ptr<PhysicalEntity> create(PhysicalDef def);
-};
-
-/*
-* @brief Class for body user data
-*/
-struct B2CustomUserData
-{
-	/*
-	* @brief Embedded class for contact information
-	*/
-	struct ContatctInfo
-	{
-		Vec2 normal;
-		std::shared_ptr<PhysicalEntity> collider;
-	};
-
-	// Pointer to the owner of the body
-	std::shared_ptr<PhysicalEntity> owner;
-
-	// Vector of contact information
-	std::vector<ContatctInfo> contacts;
-
-	// Current gravity on the body
-	float gravityStrength = 0.0f;
-
-	// If the body is grounded (colliding with the ground on a parallel horizontal line)
-	bool grounded = false;
 };

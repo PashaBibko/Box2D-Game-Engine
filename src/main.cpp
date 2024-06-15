@@ -11,16 +11,16 @@ class CustomController : public EngineController
 		void init() override
 		{
 			PhysicalDef p_def1;
-			p_def1.size = Vec2{2, 2};
-			p_def1.position = Vec2{8, 8};
+			p_def1.size = Vec2{5, 1};
+			p_def1.position = Vec2{8, 10};
 
 			p_def1.fixtureVertices.resize(1);
 
 			p_def1.fixtureVertices[0] = {
-				Vec2{-2, -2},
-				Vec2{2, -2},
-				Vec2{2, 2},
-				Vec2{-2, 2}
+				Vec2{-5, -1},
+				Vec2{5, -1},
+				Vec2{5, 1},
+				Vec2{-5, 1}
 			};
 
 			platform = PhysicalEntity::create(p_def1);
@@ -77,7 +77,17 @@ class CustomController : public EngineController
 			EngineInfo::window->setView(view);
 
 			PhysicalEntity* playerPtr = dynamic_cast<PhysicalEntity*>(player.get());
-			std::cout << "Player grounded: " << playerPtr->getB2UserData()->grounded << "\t" << "Player contact count: " << playerPtr->getB2UserData()->contacts.size() << "\n";
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && playerPtr->getB2UserData()->grounded)
+			{
+				playerPtr->setYVelocity(-20);
+			}
+
+			float newXVel = 0;
+			newXVel = newXVel - (engineInstance->isPressed(sf::Keyboard::A) * 5);
+			newXVel = newXVel + (engineInstance->isPressed(sf::Keyboard::D) * 5);
+
+			playerPtr->setXVelocity(newXVel);
 		}
 };
 
@@ -90,10 +100,14 @@ int main()
 		sf::Keyboard::Right,
 		sf::Keyboard::Up,
 		sf::Keyboard::Down,
-		sf::Mouse::Button::Left
+
+		sf::Keyboard::W,
+		sf::Keyboard::A,
+		sf::Keyboard::S,
+		sf::Keyboard::D
 	);
 
-	BASIC_LOOP(instance)
+	BASIC_LOOP(instance);
 
 	return 0;
 }

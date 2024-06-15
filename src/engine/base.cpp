@@ -86,7 +86,8 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 	EngineInfo::windowOpen = EngineInfo::window->isOpen();
 
 	// Creates the box2d world
-	EngineInfo::world = std::make_shared<b2World>(Vec2(0.0f, 5.0f));
+	EngineInfo::world = std::make_shared<b2World>(Vec2(0.0f, 0.0f));
+	EngineInfo::world->SetContactListener(&contactListenerInstance);
 
 	// Sets the EngineController engine pointer to this
 	EngineController::engineInstance = this;
@@ -135,15 +136,16 @@ void Engine::update()
 	callFuncOnMap(EngineInfo::keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 	callFuncOnMap(EngineInfo::mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 
-	// Updates box2d world with custom function
+	// Calls all Entity::preStepUpdate functions
+	for (std::shared_ptr<Entity> entity : Entity::instances)
+		entity->preStepUpdate();
 
 	// Updates the b2World
 	EngineInfo::world->Step(1.0f / 60.0f, 8, 3);
 
 	// Calls the update functions of all entities
-
 	for (std::shared_ptr<Entity> entity : Entity::instances)
-		entity->update();
+		entity->postStepUpdate();
 
 	// Calls the update controller function if it exists
 	if (controller != nullptr)

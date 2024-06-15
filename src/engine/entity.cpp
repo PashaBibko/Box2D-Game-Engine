@@ -10,9 +10,6 @@ std::vector<std::shared_ptr<Entity>> Entity::instances;
 
 // --------------- Entity Member Functions --------------- //
 
-void Entity::render() { /* E M P T Y */ }
-void Entity::update() { /* E M P T Y */ }
-
 Vec2 Entity::getSize()
 {
 	// Quality comment
@@ -73,10 +70,40 @@ PhysicalEntity::~PhysicalEntity()
 	delete reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
 }
 
-void PhysicalEntity::update()
+void PhysicalEntity::preStepUpdate()
+{
+	// Gets the user data from the body
+	B2CustomUserData* userData = getB2UserData();
+
+	// Sets correct gravity strength
+	if (userData->grounded == false)
+		userData->gravityStrength = std::min(userData->gravityStrength + GRAVITY_STRENGTH, MAX_GRAVITY);
+
+	else
+		userData->gravityStrength = std::min(GRAVITY_STRENGTH, MAX_GRAVITY);
+
+	// Adds the gravity to the velocity
+	velocity.y = velocity.y + userData->gravityStrength;
+
+	// Reset grounded to false
+	getB2UserData()->grounded = false;
+
+	// Applies the velocity to the body
+	body->SetLinearVelocity(velocity);
+}
+
+void PhysicalEntity::postStepUpdate()
 {
 	// Gets the position from the b2Body pointer
-	position = Vec2(body->GetPosition());
+	position = body->GetPosition();
+
+	// Gets the user data from the body
+	B2CustomUserData* userData = getB2UserData();
+
+	std::cout << userData->grounded << "\t" << userData->gravityStrength << std::endl;
+
+	// Sets the velocity to the velocity of the body
+	velocity = body->GetLinearVelocity();
 
 	// Updates the position of the drawable object to the position of the physical object
 	drawable.setPosition(position);
@@ -192,6 +219,8 @@ std::shared_ptr<PhysicalEntity> PhysicalEntity::create(PhysicalDef def)
 	b2BodyDef bodyDef;
 	bodyDef.type = def.bodyType;
 	bodyDef.position = def.position;
+
+	bodyDef.fixedRotation = true;
 
 	instance->body = EngineInfo::world->CreateBody(&bodyDef);
 

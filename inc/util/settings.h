@@ -8,10 +8,10 @@
 
 // Maximum gravity an object can have
 // NOT A VELOCITY CAP ONLY A GRAVITY CAP
-constexpr float MAX_GRAVITY = 100.0f;
+constexpr float MAX_GRAVITY = 5.0f;
 
 // Gravity applied each frame
-constexpr float GRAVITY_STRENGTH = 9.8f;
+constexpr float GRAVITY_STRENGTH = 0.2f;
 
 // Whether or not to allow the object to have a maximum velocity
 constexpr bool MAX_VELOCITY_ENABLED = true;
