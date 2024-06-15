@@ -177,11 +177,6 @@ class EngineController
 		std::unique_ptr<EngineController> childController;
 };
 
-// Macro because I'm lazy
-#define GET_USER_DATA(contact) \
-B2CustomUserData* userDataA = reinterpret_cast<B2CustomUserData*>(contact->GetFixtureA()->GetBody()->GetUserData().pointer); \
-B2CustomUserData* userDataB = reinterpret_cast<B2CustomUserData*>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
-
 /*
 * @brief Class for the engine
 */
@@ -198,90 +193,19 @@ class Engine
 			public:
 				/*
 				*/
-				void BeginContact(b2Contact* contact) override
-				{
-					GET_USER_DATA(contact);
-
-					// Adds the contact to the user data
-					B2CustomUserData::ContatctInfo info;
-					info.normal = Vec2(contact->GetManifold()->localNormal);
-					
-					// Adds the contact to the user data of A (if it exists)
-					if (userDataA != nullptr)
-					{
-						info.collider = userDataB->owner;
-						userDataA->contacts.push_back(info);
-					}
-
-					// Adds the contact to the user data of B (if it exists)
-					if (userDataB != nullptr)
-					{
-						info.collider = userDataA->owner;
-						userDataB->contacts.push_back(info);
-					}
-				}
+				void BeginContact(b2Contact* contact) override;
 
 				/*
 				*/
-				void EndContact(b2Contact* contact) override
-				{
-					GET_USER_DATA(contact);
-
-					// Removes the contact from the user data (if it can be found)
-					for (size_t i = 0; i < userDataA->contacts.size(); i++)
-					{
-						if (userDataA->contacts[i].collider == userDataB->owner)
-						{
-							userDataA->contacts.erase(userDataA->contacts.begin() + i);
-							break;
-						}
-					}
-					// Removes the contact from the user data (if it can be found)
-					for (size_t i = 0; i < userDataB->contacts.size(); i++)
-					{
-						if (userDataB->contacts[i].collider == userDataA->owner)
-						{
-							userDataB->contacts.erase(userDataB->contacts.begin() + i);
-							break;
-						}
-					}
-				}
+				void EndContact(b2Contact* contact) override;
 
 				/*
 				*/
-				void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override
-				{
-					GET_USER_DATA(contact);
-
-					// Updates the normals of the contacts within the user data for userDataA
-					for (size_t i = 0; i < userDataA->contacts.size(); i++)
-					{
-						if (userDataA->contacts[i].collider == userDataB->owner)
-						{
-							userDataA->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
-							userDataA->grounded = userDataA->grounded || std::abs(userDataA->contacts[i].normal.y) == 1.0f;
-							break;
-						}
-					}
-
-					// Updates the normals of the contacts within the user data for userDataB
-					for (size_t i = 0; i < userDataB->contacts.size(); i++)
-					{
-						if (userDataB->contacts[i].collider == userDataA->owner)
-						{
-							userDataB->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
-							userDataB->grounded = userDataB->grounded || std::abs(userDataB->contacts[i].normal.y) == 1.0f;
-							break;
-						}
-					}
-				}
+				void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override;
 				
 				/*
 				*/
-				void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse) override
-				{
-					GET_USER_DATA(contact);
-				}
+				void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse) override;
 		};
 
 		ContactListener contactListenerInstance;
