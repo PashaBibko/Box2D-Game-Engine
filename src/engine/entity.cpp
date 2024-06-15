@@ -67,6 +67,12 @@ PhysicalEntity::PhysicalEntity(bool call) : GraphicEntity(false)
 	renderStates.transform.scale(Vec2(EngineInfo::scale));
 }
 
+PhysicalEntity::~PhysicalEntity()
+{
+	// Deletes the user data from the body
+	delete reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
+}
+
 void PhysicalEntity::update()
 {
 	// Gets the position from the b2Body pointer
@@ -105,6 +111,36 @@ void PhysicalEntity::render()
 		// Draws the hitbox to the Engine window
 		EngineInfo::window->draw(hitbox, renderStates);
 	}
+}
+
+void PhysicalEntity::setXVelocity(float x)
+{
+	//  Sets the x velocity of the body
+	velocity.x = x;
+}
+
+void PhysicalEntity::setYVelocity(float y)
+{
+	// Sets the y velocity of the body
+	velocity.y = y;
+}
+
+void PhysicalEntity::setVelocity(Vec2 velocity)
+{
+	// Sets the velocity of the body
+	this->velocity = velocity;
+}
+
+void PhysicalEntity::addVelocity(Vec2 velocity)
+{
+	// Adds the velocity to the body
+	this->velocity = this->velocity + velocity;
+}
+
+B2CustomUserData* PhysicalEntity::getB2UserData()
+{
+	// Returns the user data from the body
+	return reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
 }
 
 // --------------- Creation functions for entities --------------- //
@@ -197,6 +233,13 @@ std::shared_ptr<PhysicalEntity> PhysicalEntity::create(PhysicalDef def)
 		// Creates the fixture and assigns it to the body
 		instance->body->CreateFixture(&fixtureDef);
 	}
+
+	// Creates a new B2CustomUserData object and assigns the instance to the owner
+	B2CustomUserData* instanceUserData = new B2CustomUserData;
+	instanceUserData->owner = instance;
+
+	// Assigns the instanceUserData to the body's user data
+	instance->body->GetUserData().pointer = reinterpret_cast<uintptr_t>(instanceUserData);
 
 	// Returns the instance
 	return instance;

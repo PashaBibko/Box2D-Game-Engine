@@ -75,6 +75,9 @@ class CustomController : public EngineController
 			}
 
 			EngineInfo::window->setView(view);
+
+			PhysicalEntity* playerPtr = dynamic_cast<PhysicalEntity*>(player.get());
+			std::cout << "Player grounded: " << playerPtr->getB2UserData()->grounded << "\t" << "Player contact count: " << playerPtr->getB2UserData()->contacts.size() << "\n";
 		}
 };
 

@@ -24,7 +24,8 @@ enum class EntityType
 class Entity
 {
 	protected:
-		// Allow the engine to access the private functions
+		// Allow the engine and world to access the private functions
+		friend class World;
 		friend class Engine;
 
 		// Vector of all instances of Entity
@@ -48,6 +49,11 @@ class Entity
 		sf::RenderStates renderStates;
 
 	public:
+		/*
+		* @brief Virtual deconstructor to allow for polymorphism
+		*/
+		virtual ~Entity() {}
+
 		/*
 		* @brief Virtual function automatically called by the engine
 		*/
@@ -159,6 +165,11 @@ class Engine
 		* @param fullscreen Whether the window should be fullscreen
 		*/
 		Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller = nullptr, bool fullscreen = false);
+
+		/*
+		* @brief Destructor for the engine
+		*/
+		~Engine();
 
 		/*
 		* @brief Function to update the engine. Automatically calls the controller onUpdate function

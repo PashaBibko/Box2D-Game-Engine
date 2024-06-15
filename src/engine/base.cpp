@@ -43,6 +43,7 @@ void EngineController::onInit()
 	if (childController != nullptr)
 		childController->onInit();
 }
+
 void EngineController::onUpdate()
 {
 	// Calls its onUpdate function
@@ -52,6 +53,7 @@ void EngineController::onUpdate()
 	if (childController != nullptr)
 		childController->onUpdate();
 }
+
 void EngineController::onRender()
 {
 	// Calls its onRender function
@@ -94,6 +96,12 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 		this->controller->onInit();
 }
 
+Engine::~Engine()
+{
+	// Decrements the instance count
+	Engine::instanceCount--;
+}
+
 void Engine::update()
 {
 	// Checks window and b2World are not nullptrs
@@ -127,11 +135,9 @@ void Engine::update()
 	callFuncOnMap(EngineInfo::keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 	callFuncOnMap(EngineInfo::mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 
+	// Updates box2d world with custom function
+
 	// Updates the b2World
-
-	#define VELOCITY_ITERATIONS 8
-	#define POSITION_ITERATIONS 3
-
 	EngineInfo::world->Step(1.0f / 60.0f, 8, 3);
 
 	// Calls the update functions of all entities
