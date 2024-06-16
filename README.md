@@ -24,5 +24,6 @@ Set VS to x32
 Intall and link libraries from:
 - [Box2D](https://github.com/erincatto/box2d)
 - [SFML (2.6.1)](https://www.sfml-dev.org/download/sfml/2.6.1/)
+- [Nlohamn JSON](https://github.com/nlohmann/json)
 
 Then press the big green button and if you are not an idiot the code will work
