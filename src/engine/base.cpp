@@ -131,7 +131,6 @@ void Engine::ContactListener::PreSolve(b2Contact* contact, const b2Manifold* old
 		if (userDataA->contacts[i].collider == userDataB->owner)
 		{
 			userDataA->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
-			userDataA->grounded = userDataA->grounded || std::abs(userDataA->contacts[i].normal.y) == 1.0f;
 			break;
 		}
 	}
@@ -142,10 +141,18 @@ void Engine::ContactListener::PreSolve(b2Contact* contact, const b2Manifold* old
 		if (userDataB->contacts[i].collider == userDataA->owner)
 		{
 			userDataB->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
-			userDataB->grounded = userDataB->grounded || std::abs(userDataB->contacts[i].normal.y) == 1.0f;
 			break;
 		}
 	}
+
+	// Sets grounded state of the entity on top
+	bool aOnTop = userDataA->owner->getPosition().y < userDataB->owner->getPosition().y;
+
+	if (aOnTop)
+		userDataA->grounded = true;
+
+	else
+		userDataB->grounded = true;
 }
 
 void Engine::ContactListener::PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
@@ -228,14 +235,14 @@ void Engine::update()
 	callFuncOnMap(EngineInfo::mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 
 	// Calls all Entity::preStepUpdate functions
-	for (std::shared_ptr<Entity> entity : Entity::instances)
+	for (std::unique_ptr<Entity>& entity : Entity::instances)
 		entity->preStepUpdate();
 
 	// Updates the b2World
 	EngineInfo::world->Step(1.0f / 60.0f, 8, 3);
 
 	// Calls the update functions of all entities
-	for (std::shared_ptr<Entity> entity : Entity::instances)
+	for (std::unique_ptr<Entity>& entity : Entity::instances)
 		entity->postStepUpdate();
 
 	// Calls the update controller function if it exists

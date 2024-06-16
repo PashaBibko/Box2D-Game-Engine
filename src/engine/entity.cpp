@@ -6,7 +6,7 @@
 #include <util/vec2.h>
 
 // Entity vector (Defined in class but has to be created here)
-std::vector<std::shared_ptr<Entity>> Entity::instances;
+std::vector<std::unique_ptr<Entity>> Entity::instances;
 
 // --------------- Entity Member Functions --------------- //
 
@@ -32,6 +32,23 @@ void Entity::setPosition(Vec2 position)
 {
 	// No I don't need a comment here
 	this->position = position;
+}
+
+void Entity::remove(Entity* entity)
+{
+	// Loops through all the instances in the instances vector
+	for (size_t i = 0; i < instances.size(); i++)
+	{
+		// If the instance is the same as the entity, it is removed from the vector
+		if (instances[i].get() == entity)
+		{
+			instances.erase(instances.begin() + i);
+			return;
+		}
+	}
+
+	// Sends a message to the console if the entity was not found
+	std::cout << "Entity not found" << std::endl;
 }
 
 // --------------- GraphicEntity Member Functions --------------- //
@@ -66,8 +83,14 @@ PhysicalEntity::PhysicalEntity(bool call) : GraphicEntity(false)
 
 PhysicalEntity::~PhysicalEntity()
 {
+	// Sends a message to the console
+	std::cout << "DECONSTRUCTOR CALLED: PHYSICAL ENTITY" << std::endl;
+
 	// Deletes the user data from the body
 	delete reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
+
+	// Delets the body from the world
+	EngineInfo::world->DestroyBody(body);
 }
 
 void PhysicalEntity::preStepUpdate()
@@ -97,9 +120,6 @@ void PhysicalEntity::postStepUpdate()
 	// Gets the position from the b2Body pointer
 	position = body->GetPosition();
 
-	// Gets the user data from the body
-	B2CustomUserData* userData = getB2UserData();
-
 	// Sets the velocity to the velocity of the body
 	velocity = body->GetLinearVelocity();
 
@@ -121,6 +141,12 @@ void PhysicalEntity::render()
 		// Creates a new VertexArray object with the correct size and type
 		sf::VertexArray hitbox(sf::LineStrip, shape->m_count + 1);
 
+		//
+		sf::Color chosenColor = sf::Color::Red;
+
+		if (getB2UserData()->grounded)
+			chosenColor = sf::Color::Green;
+
 		// Loops through all the vertices in the shape and sets the position and color
 		for (int32 j = 0; j < shape->m_count + 1; j++)
 		{
@@ -130,7 +156,7 @@ void PhysicalEntity::render()
 			else
 				hitbox[j].position = Vec2(body->GetWorldPoint(shape->m_vertices[j]));
 
-			hitbox[j].color = sf::Color::Red;
+			hitbox[j].color = chosenColor;
 		}
 
 		// Draws the hitbox to the Engine window
@@ -170,13 +196,14 @@ B2CustomUserData* PhysicalEntity::getB2UserData()
 
 // --------------- Creation functions for entities --------------- //
 
-std::shared_ptr<GraphicEntity> GraphicEntity::create(GraphicDef def)
+GraphicEntity* GraphicEntity::create(GraphicDef def)
 {
 	// Creates a new instance of GraphicEntity and adds it to the instances vector
-	instances.push_back(std::make_shared<GraphicEntity>());
+	instances.push_back(std::make_unique<GraphicEntity>());
 
 	// Gets the last instance in the vector and casts it to a GraphicEntity
-	std::shared_ptr<GraphicEntity> instance = std::static_pointer_cast<GraphicEntity>(instances.back());
+	Entity* vecPtr = instances.back().get();
+	GraphicEntity* instance = static_cast<GraphicEntity*>(vecPtr);
 
 	// Sets the type of the instance to GRAPHIC_ONLY
 	instance->type = EntityType::GRAPHIC_ONLY;
@@ -193,13 +220,14 @@ std::shared_ptr<GraphicEntity> GraphicEntity::create(GraphicDef def)
 	return instance;
 }
 
-std::shared_ptr<PhysicalEntity> PhysicalEntity::create(PhysicalDef def)
+PhysicalEntity* PhysicalEntity::create(PhysicalDef def)
 {
 	// Creates a new instance of PhysicalEntity and adds it to the instances vector
-	instances.push_back(std::make_shared<PhysicalEntity>());
+	instances.push_back(std::make_unique<PhysicalEntity>());
 
 	// Gets the last instance in the vector and casts it to a PhysicalEntity
-	std::shared_ptr<PhysicalEntity> instance = std::static_pointer_cast<PhysicalEntity>(instances.back());
+	Entity* vecPtr = instances.back().get();
+	PhysicalEntity* instance = static_cast<PhysicalEntity*>(vecPtr);
 
 	// Sets the type of the instance to GRAPHIC_PHYSICAL
 	instance->type = EntityType::GRAPHIC_PHYSICAL;
@@ -300,7 +328,7 @@ PhysicalDef createDefOf(PhysicalEntity* entity)
 	def.bodyType = entity->body->GetType();
 
 	// Assigns the fixture vertices of the entity to the def object
-	for (int i = 0; i < entity->shapes.size(); i++)
+	for (size_t i = 0; i < entity->shapes.size(); i++)
 	{
 		// Creates a vector of the vertices
 		std::vector<Vec2> vertices;

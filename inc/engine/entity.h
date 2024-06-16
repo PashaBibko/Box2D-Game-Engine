@@ -73,7 +73,7 @@ class GraphicEntity : public Entity
 		* 
 		* @return A shared pointer to the created entity
 		*/
-		static std::shared_ptr<GraphicEntity> create(GraphicDef def);
+		static GraphicEntity* create(GraphicDef def);
 };
 
 /*
@@ -166,7 +166,7 @@ class PhysicalEntity : public GraphicEntity
 		* 
 		* @return A shared pointer to the created entity
 		*/
-		static std::shared_ptr<PhysicalEntity> create(PhysicalDef def);
+		static PhysicalEntity* create(PhysicalDef def);
 };
 
 /*

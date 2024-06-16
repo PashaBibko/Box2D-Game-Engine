@@ -6,6 +6,7 @@
 
 // Foward declaration of engine classes
 class PhysicalEntity;
+class Entity;
 class Engine;
 
 /*
@@ -19,11 +20,11 @@ struct B2CustomUserData
 	struct ContatctInfo
 	{
 		Vec2 normal;
-		std::shared_ptr<PhysicalEntity> collider;
+		Entity* collider;
 	};
 
 	// Pointer to the owner of the body
-	std::shared_ptr<PhysicalEntity> owner;
+	Entity* owner;
 
 	// Vector of contact information
 	std::vector<ContatctInfo> contacts;
@@ -57,7 +58,7 @@ class Entity
 		friend class Engine;
 
 		// Vector of all instances of Entity
-		static std::vector<std::shared_ptr<Entity>> instances;
+		static std::vector<std::unique_ptr<Entity>> instances;
 
 		/*
 		* @brief Function called before b2World::Step is called
@@ -117,6 +118,10 @@ class Entity
 		* @param position New position of the entity
 		*/
 		void setPosition(Vec2 position);
+
+		/*
+		*/
+		static void remove(Entity* entity);
 };
 
 /*

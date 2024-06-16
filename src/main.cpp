@@ -8,10 +8,10 @@ long counter = 0;
 class CustomController : public EngineController
 {
 	private:
-		std::shared_ptr<Entity> platform1;
-		std::shared_ptr<Entity> platform2;
+		Entity* platform1;
+		Entity* platform2;
 
-		std::shared_ptr<Entity> player;
+		PhysicalEntity* player;
 
 	public:
 		void init() override
@@ -90,31 +90,28 @@ class CustomController : public EngineController
 
 			//
 
-			PhysicalEntity* playerPtr = dynamic_cast<PhysicalEntity*>(player.get());
+			std::cout << "B2WorldObjects: " << EngineInfo::world->GetBodyCount() << " \n";
 
-			if (engineInstance->isPressed(sf::Keyboard::W) && playerPtr->getB2UserData()->grounded)
+			//
+
+			if (engineInstance->isPressed(sf::Keyboard::W) && player->getB2UserData()->grounded)
 			{
-				playerPtr->setYVelocity(-20);
+				player->setYVelocity(-20);
 			}
 
 			float newXVel = 0;
 			newXVel = newXVel - (engineInstance->isPressed(sf::Keyboard::A) * 5);
 			newXVel = newXVel + (engineInstance->isPressed(sf::Keyboard::D) * 5);
 
-			playerPtr->setXVelocity(newXVel);
+			player->setXVelocity(newXVel);
 
-			// THE CODE BELOW DOES NOT WORK
-			// 
-			// FOR SEMI-GOOD RESULTS USE engineInstance->isClicked(sf::Keyboard::R)
-			// FOR FUNNY RESULTS USE     engineInstance->isPressed(sf::Keyboard::R)
-
-			if (engineInstance->isPressed(sf::Keyboard::R))
+			if (engineInstance->isClicked(sf::Keyboard::R))
 			{
 				PhysicalDef newPlayerDef;
 
-				PhysicalEntity* playerPtr = dynamic_cast<PhysicalEntity*>(player.get());
+				newPlayerDef = createDefOf(player);
 
-				newPlayerDef = createDefOf(playerPtr);
+				Entity::remove(player);
 
 				player = PhysicalEntity::create(newPlayerDef);
 
