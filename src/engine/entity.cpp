@@ -5,6 +5,8 @@
 #include <util/libs.h>
 #include <util/vec2.h>
 
+long long nextID = 0;
+
 // Entity vector (Defined in class but has to be created here)
 std::vector<std::unique_ptr<Entity>> Entity::instances;
 
@@ -46,9 +48,15 @@ void Entity::remove(Entity* entity)
 			return;
 		}
 	}
+}
 
-	// Sends a message to the console if the entity was not found
-	std::cout << "Entity not found" << std::endl;
+Entity::Entity()
+{
+	// Increments the nextID and assigns it to the id
+	id = nextID++;
+
+	// Sends a message to the console
+	std::cout << "CONSTRUCTOR CALLED - ENTITY - ID: " << id << "\n" << std::endl;
 }
 
 // --------------- GraphicEntity Member Functions --------------- //
@@ -61,6 +69,7 @@ GraphicEntity::GraphicEntity(bool call)
 
 	// Sets correct render state transform scale
 	renderStates.transform.scale(Vec2(EngineInfo::scale));
+	renderStates.shader = &EngineInfo::globalShader;
 }
 
 void GraphicEntity::render()
@@ -79,18 +88,23 @@ PhysicalEntity::PhysicalEntity(bool call) : GraphicEntity(false)
 
 	// Sets correct render state transform scale
 	renderStates.transform.scale(Vec2(EngineInfo::scale));
+	renderStates.shader = &EngineInfo::globalShader;
 }
 
 PhysicalEntity::~PhysicalEntity()
 {
 	// Sends a message to the console
-	std::cout << "DECONSTRUCTOR CALLED: PHYSICAL ENTITY" << std::endl;
+	std::cout << "DECONSTRUCTOR CALLED - PHYSICAL ENTITY - ID: " << id << "\n" << std::endl;
 
 	// Deletes the user data from the body
 	delete reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
 
-	// Delets the body from the world
-	EngineInfo::world->DestroyBody(body);
+	// Deletes the body from the world
+	if (body != nullptr || id == 0 || id == 1)
+		EngineInfo::world->DestroyBody(body);
+
+	else
+		std::cout << "Body is nullptr" << std::endl;
 }
 
 void PhysicalEntity::preStepUpdate()

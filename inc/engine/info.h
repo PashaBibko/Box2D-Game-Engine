@@ -24,6 +24,9 @@ struct EngineInfo
 		static std::unordered_map<sf::Mouse::Button, long> mouseMap;
 
 	public:
+		// The global shader that is used for rendering
+		static sf::Shader globalShader;
+
 		// The window that the game is being rendered to
 		static std::shared_ptr<sf::RenderWindow> window;
 

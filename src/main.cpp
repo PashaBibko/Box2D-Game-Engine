@@ -3,8 +3,6 @@
 
 #include <json.hpp>
 
-long counter = 0;
-
 class CustomController : public EngineController
 {
 	private:
@@ -52,6 +50,8 @@ class CustomController : public EngineController
 			};
 
 			player = PhysicalEntity::create(p_def2);
+
+			//
 		}
 
 		void render() override
@@ -73,7 +73,7 @@ class CustomController : public EngineController
 
 			if (engineInstance->isPressed(sf::Keyboard::Right))
 			{
-				view.move(2.0f, 0);
+				view.move(2.1f, 0);
 			}
 
 			if (engineInstance->isPressed(sf::Keyboard::Up))
@@ -87,10 +87,6 @@ class CustomController : public EngineController
 			}
 
 			EngineInfo::window->setView(view);
-
-			//
-
-			std::cout << "B2WorldObjects: " << EngineInfo::world->GetBodyCount() << " \n";
 
 			//
 
@@ -114,9 +110,6 @@ class CustomController : public EngineController
 				Entity::remove(player);
 
 				player = PhysicalEntity::create(newPlayerDef);
-
-				counter++;
-				std::cout << "Player recreated: " << counter << " \n";
 			}
 		}
 };
@@ -124,6 +117,7 @@ class CustomController : public EngineController
 int main()
 {
 	Engine instance(Vec2{ 800, 600 }, std::make_unique<CustomController>());
+	EngineInfo::globalShader.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/res/shaders/invert.frag", sf::Shader::Fragment);
 
 	instance.addInputs(
 		sf::Keyboard::Left,

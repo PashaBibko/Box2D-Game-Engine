@@ -9,6 +9,8 @@
 std::shared_ptr<sf::RenderWindow> EngineInfo::window = nullptr;
 std::shared_ptr<b2World> EngineInfo::world = nullptr;
 
+sf::Shader EngineInfo::globalShader;
+
 bool EngineInfo::windowOpen = false;
 
 std::unordered_map<sf::Keyboard::Key, long> EngineInfo::keyMap;
@@ -199,6 +201,12 @@ Engine::~Engine()
 {
 	// Decrements the instance count
 	Engine::instanceCount--;
+
+	//
+	while (Entity::instances.size() != 0)
+	{
+		Entity::remove(Entity::instances[0].get());
+	}
 }
 
 void Engine::update()

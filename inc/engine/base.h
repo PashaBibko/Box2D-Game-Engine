@@ -82,7 +82,14 @@ class Entity
 		// Render states of the entity (set automatically)
 		sf::RenderStates renderStates;
 
+		//
+		long long id;
+
 	public:
+		/*
+		*/
+		Entity();
+
 		/*
 		* @brief Virtual deconstructor to allow for polymorphism
 		*/
