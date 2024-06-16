@@ -1,16 +1,19 @@
 # Box2D Game Engine
 
-Simple 2D game engine built using:
+### Languages Used:
+* C++
+
+### Libraries Used:
 * Box2D
 * SFML
-* OpenGL (later)
+* OpenGL (not included yet)
 * Nlohamn JSON
 
 ## Comit Hashtag Meanings
 
 1. FB
 > This means there is a bug within the code.
-> However for one reason or another I found it funny so i decided to leave it in
+> However for one reason or another I found it funny so i decided to leave it in.
 > There will be a note in the relavant source file with instructions on how to
 > enable / disable it.
 
