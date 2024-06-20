@@ -5,8 +5,6 @@
 #include <util/libs.h>
 #include <util/vec2.h>
 
-long long nextID = 0;
-
 // Entity vector (Defined in class but has to be created here)
 std::vector<std::unique_ptr<Entity>> Entity::instances;
 
@@ -51,13 +49,7 @@ void Entity::remove(Entity* entity)
 }
 
 Entity::Entity()
-{
-	// Increments the nextID and assigns it to the id
-	id = nextID++;
-
-	// Sends a message to the console
-	std::cout << "CONSTRUCTOR CALLED - ENTITY - ID: " << id << "\n" << std::endl;
-}
+{}
 
 // --------------- GraphicEntity Member Functions --------------- //
 
@@ -68,14 +60,13 @@ GraphicEntity::GraphicEntity(bool call)
 		return;
 
 	// Sets correct render state transform scale
-	renderStates.transform.scale(Vec2(EngineInfo::scale));
-	renderStates.shader = &EngineInfo::globalShader;
+	renderStates.transform.scale(Vec2(engineInstance->pxToMeter));
 }
 
 void GraphicEntity::render()
 {
 	// Renders the drawable object to the Engine window
-	EngineInfo::window->draw(drawable, renderStates);
+	engineInstance->draw(drawable, renderStates);
 }
 
 // --------------- PhysicalEntity Member Functions --------------- //
@@ -87,24 +78,17 @@ PhysicalEntity::PhysicalEntity(bool call) : GraphicEntity(false)
 		return;
 
 	// Sets correct render state transform scale
-	renderStates.transform.scale(Vec2(EngineInfo::scale));
-	renderStates.shader = &EngineInfo::globalShader;
+	renderStates.transform.scale(Vec2(engineInstance->pxToMeter));
 }
 
 PhysicalEntity::~PhysicalEntity()
 {
-	// Sends a message to the console
-	std::cout << "DECONSTRUCTOR CALLED - PHYSICAL ENTITY - ID: " << id << "\n" << std::endl;
-
 	// Deletes the user data from the body
 	delete reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
 
 	// Deletes the body from the world
-	if (body != nullptr || id == 0 || id == 1)
-		EngineInfo::world->DestroyBody(body);
-
-	else
-		std::cout << "Body is nullptr" << std::endl;
+	if (body != nullptr)
+		engineInstance->world->DestroyBody(body);
 }
 
 void PhysicalEntity::preStepUpdate()
@@ -144,7 +128,7 @@ void PhysicalEntity::postStepUpdate()
 void PhysicalEntity::render()
 {
 	// Renders the drawable object to the Engine window
-	EngineInfo::window->draw(drawable, renderStates);
+	engineInstance->draw(drawable, renderStates);
 
 	// Loops through all the shapes in the shapes vector
 	for (size_t i = 0; i < shapes.size(); i++)
@@ -174,7 +158,7 @@ void PhysicalEntity::render()
 		}
 
 		// Draws the hitbox to the Engine window
-		EngineInfo::window->draw(hitbox, renderStates);
+		engineInstance->draw(hitbox, renderStates);
 	}
 }
 
@@ -262,7 +246,7 @@ PhysicalEntity* PhysicalEntity::create(PhysicalDef def)
 
 	bodyDef.fixedRotation = true;
 
-	instance->body = EngineInfo::world->CreateBody(&bodyDef);
+	instance->body = engineInstance->world->CreateBody(&bodyDef);
 
 	// Creates the shapes for the fixtures
 

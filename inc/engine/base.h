@@ -2,17 +2,28 @@
 
 #include <util/util.h>
 
-#include <engine/info.h>
-
 // Foward declaration of engine classes
 class PhysicalEntity;
 class Entity;
 class Engine;
 
 /*
+* @brief Simple class with a static pointer to the engine instance
+*/
+class EngineSubClass
+{
+	protected:
+		// Allow the engine to access the private members
+		friend class Engine;
+
+		// Pointer to the engine
+		static Engine* engineInstance;
+};
+
+/*
 * @brief Class for body user data
 */
-struct B2CustomUserData
+struct B2CustomUserData : public EngineSubClass
 {
 	/*
 	* @brief Embedded class for contact information
@@ -20,7 +31,7 @@ struct B2CustomUserData
 	struct ContatctInfo
 	{
 		Vec2 normal;
-		Entity* collider;
+		Entity* collider = nullptr;
 	};
 
 	// Pointer to the owner of the body
@@ -50,7 +61,7 @@ enum class EntityType
 /*
 * @brief Base polymorphic class for all entities
 */
-class Entity
+class Entity : public EngineSubClass
 {
 	protected:
 		// Allow the engine and world to access the private functions
@@ -81,9 +92,6 @@ class Entity
 
 		// Render states of the entity (set automatically)
 		sf::RenderStates renderStates;
-
-		//
-		long long id;
 
 	public:
 		/*
@@ -134,7 +142,7 @@ class Entity
 /*
 * @brief Base polymorphic class for all EngineControllers
 */
-class EngineController
+class EngineController : public EngineSubClass
 {
 	private:
 		// Allow the engine to access the private functions
@@ -154,10 +162,6 @@ class EngineController
 		* @brief Function called when the engine is updated which calls the update function and any child controllers
 		*/
 		void onUpdate();
-
-	protected:
-		// Static pointer to the engine
-		static Engine* engineInstance;
 
 	public:
 		/*
@@ -220,11 +224,36 @@ class Engine
 				void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse) override;
 		};
 
+		// Instance of the contact listener
 		ContactListener contactListenerInstance;
 
+		// Position of the mouse
+		Vec2 mousePos;
+
+		// Map of all the keys that are currently being pressed
+		static std::unordered_map<sf::Keyboard::Key, long> keyMap;
+
+		// Map of all the mouse buttons that are currently being pressed
+		static std::unordered_map<sf::Mouse::Button, long> mouseMap;
+
+		// Window the engine is rendering to
+		sf::RenderWindow window;
+
+		// Render texture of the window
+		sf::RenderTexture windowRenderTexture;
+
+		//
+		sf::VertexArray windowDisplayQuad;
+
 	public:
+		// b2World the game is simulating
+		b2World* world;
+
 		// Unique pointer to the engine controller
 		std::unique_ptr<EngineController>controller;
+
+		// Scale of the engine
+		static const float pxToMeter;
 
 		/*
 		* @brief Constructor for the engine
@@ -249,6 +278,28 @@ class Engine
 		* @brief Function to render the engine. Automatically calls the controller onRender function
 		*/
 		void render();
+
+		/*
+		* @brief Function to draw a drawable object to the window
+		* 
+		* @param drawable Drawable object to draw
+		* @param renderStates Render states of the object
+		*/
+		void draw(sf::Drawable& drawable, sf::RenderStates renderStates = sf::RenderStates::Default) { windowRenderTexture.draw(drawable, renderStates); }
+
+		/*
+		* @brief Function to move the view of the engine
+		* 
+		* @param offset Offset to move the view by
+		*/
+		void moveView(Vec2 offset);
+
+		/*
+		* @brief Function to check if the window is open
+		* 
+		* @return Whether the window is open
+		*/
+		bool isRunning() { return window.isOpen(); }
 
 		/*
 		* @brief Gets frames since held / frames held for
@@ -294,6 +345,13 @@ class Engine
 		*/
 		void addInput(sf::Mouse::Button button);
 
+		/* 
+		* @brief Function to get the position of the mouse
+		* 
+		* @return Position of the mouse
+		*/
+		Vec2 getMousePos() { return mousePos; }
+
 		/*
 		* @brief Empty function to avoid recursion errors
 		*/
@@ -332,7 +390,7 @@ class Engine
 * @brief Macro for a simple loop of the engine
 */
 #define BASIC_LOOP(instance) \
-while (EngineInfo::windowOpen) \
+while (instance.isRunning()) \
 { \
 	instance.update(); \
 	instance.render(); \

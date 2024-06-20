@@ -2,37 +2,18 @@
 
 #include <util/util.h>
 
-#include <engine/info.h>
+// Creates instances of static members of EngineSubClass
 
-// Creates instances of static members of EngineInfo
-
-std::shared_ptr<sf::RenderWindow> EngineInfo::window = nullptr;
-std::shared_ptr<b2World> EngineInfo::world = nullptr;
-
-sf::Shader EngineInfo::globalShader;
-
-bool EngineInfo::windowOpen = false;
-
-std::unordered_map<sf::Keyboard::Key, long> EngineInfo::keyMap;
-std::unordered_map<sf::Mouse::Button, long> EngineInfo::mouseMap;
-
-Vec2 EngineInfo::mousePos;
-
-const float EngineInfo::scale = 50.0f;
-
-#if DEBUG
-
-bool EngineInfo::showHitboxes = false;
-
-#endif
-
-// Creates instances of static members of EngineController
-
-Engine* EngineController::engineInstance = nullptr;
+Engine* EngineSubClass::engineInstance = nullptr;
 
 // Creates instances of static members of Engine
 
 size_t Engine::instanceCount = 0;
+
+const float Engine::pxToMeter = 50.0f;
+
+std::unordered_map<sf::Keyboard::Key, long> Engine::keyMap;
+std::unordered_map<sf::Mouse::Button, long> Engine::mouseMap;
 
 // ----- EngineController Functions ----- //
 
@@ -85,15 +66,11 @@ void Engine::ContactListener::BeginContact(b2Contact* contact)
 	info.normal = Vec2(contact->GetManifold()->localNormal);
 
 	// Adds the contact to the user data of A (if it exists)
-	if (userDataA != nullptr)
+	if (userDataA != nullptr && userDataB != nullptr)
 	{
 		info.collider = userDataB->owner;
 		userDataA->contacts.push_back(info);
-	}
 
-	// Adds the contact to the user data of B (if it exists)
-	if (userDataB != nullptr)
-	{
 		info.collider = userDataA->owner;
 		userDataB->contacts.push_back(info);
 	}
@@ -171,6 +148,9 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 	// Increments the instance count
 	Engine::instanceCount++;
 
+	// Sets the EngineSubClass::engineInstance to this
+	EngineSubClass::engineInstance = this;
+
 	// Throws an error if the instance count is not 1 and not allowed by the settings
 	if (Engine::instanceCount != 1 && !ALLOW_MULTIPLE_INSTANCES)
 		throw std::runtime_error("Multiple instances of the engine are not allowed");
@@ -178,19 +158,32 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 	// Creates the window
 	sf::VideoMode videoMode = (fullscreen) ? sf::VideoMode::getDesktopMode() : sf::VideoMode((int)windowSize.x, (int)windowSize.y);
 
-	EngineInfo::window = std::make_shared<sf::RenderWindow>(videoMode, "GAME ENGINE");
-	EngineInfo::window->setView(sf::View(sf::FloatRect(0, 0, windowSize.x, windowSize.y)));
-	EngineInfo::window->setFramerateLimit(60);
+	window.create(videoMode, "GAME ENGINE");
+	window.setView(sf::View(sf::FloatRect(0, 0, windowSize.x, windowSize.y)));
+	window.setFramerateLimit(60);
 
-	// Sets the windowOpen flag
-	EngineInfo::windowOpen = EngineInfo::window->isOpen();
+	windowRenderTexture.create(1920, 1080);
 
 	// Creates the box2d world
-	EngineInfo::world = std::make_shared<b2World>(Vec2(0.0f, 0.0f));
-	EngineInfo::world->SetContactListener(&contactListenerInstance);
+	world = new b2World(Vec2(0.0f, 0.0f));
+	world->SetContactListener(&contactListenerInstance);
 
-	// Sets the EngineController engine pointer to this
-	EngineController::engineInstance = this;
+	// Intialises the windowDisplayQuad
+	windowDisplayQuad.setPrimitiveType(sf::TriangleStrip);
+	windowDisplayQuad.resize(4);
+
+	windowDisplayQuad[0].position = sf::Vector2f(0.0, 0.0);
+	windowDisplayQuad[1].position = sf::Vector2f((float)window.getSize().x, 0.0);
+	windowDisplayQuad[2].position = sf::Vector2f(0.0, (float)window.getSize().y);
+	windowDisplayQuad[3].position = sf::Vector2f((float)window.getSize().x, (float)window.getSize().y);
+
+	windowDisplayQuad[0].texCoords = sf::Vector2f(0, 0);
+	windowDisplayQuad[1].texCoords = sf::Vector2f((float)windowRenderTexture.getSize().x, 0.0);
+	windowDisplayQuad[2].texCoords = sf::Vector2f(0.0, (float)windowRenderTexture.getSize().y);
+	windowDisplayQuad[3].texCoords = sf::Vector2f((float)windowRenderTexture.getSize().x, (float)windowRenderTexture.getSize().y);
+
+	// I have no idea why this centres it onto the origin
+	moveView({ -1920 / 3, -1080 / 3 });
 
 	// Calls the init controller function if it exists
 	if (this->controller != nullptr)
@@ -202,35 +195,30 @@ Engine::~Engine()
 	// Decrements the instance count
 	Engine::instanceCount--;
 
-	//
+	// Removes all entities
 	while (Entity::instances.size() != 0)
-	{
 		Entity::remove(Entity::instances[0].get());
-	}
+
+	// Deletes the b2World
+	delete world;
 }
 
 void Engine::update()
 {
-	// Checks window and b2World are not nullptrs
-	
-	if (EngineInfo::window == nullptr || EngineInfo::world == nullptr)
-		throw std::runtime_error("EngineInfo::window or EngineInfo::world is nullptr");
-
 	// Polls window events
 
 	sf::Event event;
 
-	while (EngineInfo::window->pollEvent(event))
+	while (window.pollEvent(event))
 	{
 		switch (event.type)
 		{
 			case sf::Event::Closed:
-				EngineInfo::window->close();
-				EngineInfo::windowOpen = EngineInfo::window->isOpen();
+				window.close();
 				break;
 
 			case sf::Event::MouseMoved:
-				EngineInfo::mousePos = EngineInfo::window->mapPixelToCoords({ event.mouseMove.x, event.mouseMove.y });
+				mousePos = window.mapPixelToCoords({ event.mouseMove.x, event.mouseMove.y });
 				break;
 		}
 	}
@@ -239,15 +227,15 @@ void Engine::update()
 
 	#define MIDPOINT 0 // Can change (no logical reason why it should not be 0)
 
-	callFuncOnMap(EngineInfo::keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
-	callFuncOnMap(EngineInfo::mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
+	callFuncOnMap(keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
+	callFuncOnMap(mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
 
 	// Calls all Entity::preStepUpdate functions
 	for (std::unique_ptr<Entity>& entity : Entity::instances)
 		entity->preStepUpdate();
 
 	// Updates the b2World
-	EngineInfo::world->Step(1.0f / 60.0f, 8, 3);
+	world->Step(1.0f / 60.0f, 8, 3);
 
 	// Calls the update functions of all entities
 	for (std::unique_ptr<Entity>& entity : Entity::instances)
@@ -260,55 +248,69 @@ void Engine::update()
 
 void Engine::render()
 {
-	// Checks window is not nullptr
-	if (EngineInfo::window == nullptr)
-		throw std::runtime_error("EngineInfo::window is nullptr");
-
 	// Clears the window
-	EngineInfo::window->clear();
+	window.clear();
+
+	// Clears the render texture
+	windowRenderTexture.clear();
 
 	// Calls the render controller function if it exists
 	if (controller != nullptr)
 		controller->onRender();
 
+	// Displays the render texture
+	windowRenderTexture.display();
+	
+	sf::RenderStates states;
+	states.texture = &windowRenderTexture.getTexture();
+
+	window.draw(windowDisplayQuad, states);
+
 	// Displays the window
-	EngineInfo::window->display();
+	window.display();
+}
+
+void Engine::moveView(Vec2 offset)
+{
+	sf::View view = windowRenderTexture.getView();
+	view.move(offset.x, offset.y);
+	windowRenderTexture.setView(view);
 }
 
 long Engine::getInputInfo(sf::Keyboard::Key key)
 {
 	// Checks key is in the keyMap
-	if (EngineInfo::keyMap.find(key) == EngineInfo::keyMap.end())
+	if (keyMap.find(key) == keyMap.end())
 		return 0;
 
 	// Returns the value of the key in the keyMap
-	return EngineInfo::keyMap[key];
+	return keyMap[key];
 }
 
 long Engine::getInputInfo(sf::Mouse::Button button)
 {
 	// Checks button is in the mouseMap
-	if (EngineInfo::mouseMap.find(button) == EngineInfo::mouseMap.end())
+	if (mouseMap.find(button) == mouseMap.end())
 		return 0;
 
 	// Returns the value of the button in the mouseMap
-	return EngineInfo::mouseMap[button];
+	return mouseMap[button];
 }
 
 void Engine::addInput(sf::Keyboard::Key key)
 {
 	// Adds the key to the keyMap if it is not already in it
-	if (!inMap(EngineInfo::keyMap, key))
+	if (!inMap(keyMap, key))
 	{
-		EngineInfo::keyMap[key] = 0;
+		keyMap[key] = 0;
 	}
 }
 
 void Engine::addInput(sf::Mouse::Button button)
 {
 	// Adds the button to the mouseMap if it is not already in it
-	if (!inMap(EngineInfo::mouseMap, button))
+	if (!inMap(mouseMap, button))
 	{
-		EngineInfo::mouseMap[button] = 0;
+		mouseMap[button] = 0;
 	}
 }

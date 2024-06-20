@@ -6,47 +6,47 @@
 class CustomController : public EngineController
 {
 	private:
-		Entity* platform1;
-		Entity* platform2;
+		Entity* platform1 = nullptr;
+		Entity* platform2 = nullptr;
 
-		PhysicalEntity* player;
+		PhysicalEntity* player = nullptr;
 
 	public:
 		void init() override
 		{
 			PhysicalDef p_def1;
-			p_def1.size = Vec2{5, 1};
-			p_def1.position = Vec2{8, 10};
+			p_def1.size = Vec2{400 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter };
+			p_def1.position = Vec2{400 / engineInstance->pxToMeter, 500 / engineInstance->pxToMeter };
 
 			p_def1.fixtureVertices.resize(1);
 
 			p_def1.fixtureVertices[0] = {
-				Vec2{-5, -1},
-				Vec2{5, -1},
-				Vec2{5, 1},
-				Vec2{-5, 1}
+				Vec2{-400 / engineInstance->pxToMeter, -50 / engineInstance->pxToMeter},
+				Vec2{400 / engineInstance->pxToMeter, -50 / engineInstance->pxToMeter},
+				Vec2{400 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter},
+				Vec2{-400 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter}
 			};
 			
 			platform1 = PhysicalEntity::create(p_def1);
 
-			p_def1.position = Vec2{8, 0};
+			p_def1.position = Vec2{400 / engineInstance->pxToMeter, 0};
 
 			platform2 = PhysicalEntity::create(p_def1);
 
 			//
 
 			PhysicalDef p_def2;
-			p_def2.size = Vec2{1, 1};
-			p_def2.position = Vec2{8, 5};
+			p_def2.size = Vec2{50 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter };
+			p_def2.position = Vec2{400 / engineInstance->pxToMeter, 250 / engineInstance->pxToMeter };
 			p_def2.bodyType = b2_dynamicBody;
 
 			p_def2.fixtureVertices.resize(1);
 
 			p_def2.fixtureVertices[0] = {
-				Vec2{-1, -1},
-				Vec2{1, -1},
-				Vec2{1, 1},
-				Vec2{-1, 1}
+				Vec2{-50 / engineInstance->pxToMeter, -50 / engineInstance->pxToMeter},
+				Vec2{50 / engineInstance->pxToMeter, -50 / engineInstance->pxToMeter},
+				Vec2{50 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter},
+				Vec2{-50 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter}
 			};
 
 			player = PhysicalEntity::create(p_def2);
@@ -64,29 +64,25 @@ class CustomController : public EngineController
 
 		void update() override
 		{
-			sf::View view = EngineInfo::window->getView();
-
 			if (engineInstance->isPressed(sf::Keyboard::Left))
 			{
-				view.move(-2.0f, 0);
+				engineInstance->moveView({ -2.0f, 0 });
 			}
 
 			if (engineInstance->isPressed(sf::Keyboard::Right))
 			{
-				view.move(2.1f, 0);
+				engineInstance->moveView({  2.0f, 0 });
 			}
 
 			if (engineInstance->isPressed(sf::Keyboard::Up))
 			{
-				view.move(0, -2.0f);
+				engineInstance->moveView({ 0, -2.0f });
 			}
 
 			if (engineInstance->isPressed(sf::Keyboard::Down))
 			{
-				view.move(0, 2.0f);
+				engineInstance->moveView({ 0,  2.0f });
 			}
-
-			EngineInfo::window->setView(view);
 
 			//
 
@@ -116,8 +112,7 @@ class CustomController : public EngineController
 
 int main()
 {
-	Engine instance(Vec2{ 800, 600 }, std::make_unique<CustomController>());
-	EngineInfo::globalShader.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/res/shaders/invert.frag", sf::Shader::Fragment);
+	Engine instance(Vec2{ 1280, 720 }, std::make_unique<CustomController>());
 
 	instance.addInputs(
 		sf::Keyboard::Left,
