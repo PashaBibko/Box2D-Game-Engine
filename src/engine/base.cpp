@@ -263,6 +263,7 @@ void Engine::render()
 	
 	sf::RenderStates states;
 	states.texture = &windowRenderTexture.getTexture();
+	states.shader = &testShader;
 
 	window.draw(windowDisplayQuad, states);
 

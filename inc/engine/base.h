@@ -255,6 +255,8 @@ class Engine
 		// Scale of the engine
 		static const float pxToMeter;
 
+		sf::Shader testShader;
+
 		/*
 		* @brief Constructor for the engine
 		* 

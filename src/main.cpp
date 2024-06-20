@@ -113,6 +113,7 @@ class CustomController : public EngineController
 int main()
 {
 	Engine instance(Vec2{ 1280, 720 }, std::make_unique<CustomController>());
+	instance.testShader.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/glsl/invert.frag", sf::Shader::Fragment);
 
 	instance.addInputs(
 		sf::Keyboard::Left,
