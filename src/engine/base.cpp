@@ -68,11 +68,8 @@ void Engine::ContactListener::BeginContact(b2Contact* contact)
 	// Adds the contact to the user data of A (if it exists)
 	if (userDataA != nullptr && userDataB != nullptr)
 	{
-		info.collider = userDataB->owner;
-		userDataA->contacts.push_back(info);
-
-		info.collider = userDataA->owner;
-		userDataB->contacts.push_back(info);
+		userDataA->contacts[userDataB->owner] = info;
+		userDataB->contacts[userDataA->owner] = info;
 	}
 }
 
@@ -80,23 +77,14 @@ void Engine::ContactListener::EndContact(b2Contact* contact)
 {
 	GET_USER_DATA(contact);
 
-	// Removes the contact from the user data (if it can be found)
-	for (size_t i = 0; i < userDataA->contacts.size(); i++)
+	// Removes the contacts from the user data (if it can be found)
+	if (userDataA != nullptr && userDataB != nullptr)
 	{
-		if (userDataA->contacts[i].collider == userDataB->owner)
-		{
-			userDataA->contacts.erase(userDataA->contacts.begin() + i);
-			break;
-		}
-	}
-	// Removes the contact from the user data (if it can be found)
-	for (size_t i = 0; i < userDataB->contacts.size(); i++)
-	{
-		if (userDataB->contacts[i].collider == userDataA->owner)
-		{
-			userDataB->contacts.erase(userDataB->contacts.begin() + i);
-			break;
-		}
+		if (userDataA->owner == nullptr || userDataB->owner == nullptr)
+			return;
+		
+		userDataA->contacts.erase(userDataB->owner);
+		userDataB->contacts.erase(userDataA->owner);
 	}
 }
 
@@ -104,34 +92,22 @@ void Engine::ContactListener::PreSolve(b2Contact* contact, const b2Manifold* old
 {
 	GET_USER_DATA(contact);
 
-	// Updates the normals of the contacts within the user data for userDataA
-	for (size_t i = 0; i < userDataA->contacts.size(); i++)
+	// Checks both userData exsist
+	if (userDataA != nullptr && userDataB != nullptr)
 	{
-		if (userDataA->contacts[i].collider == userDataB->owner)
-		{
-			userDataA->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
-			break;
-		}
+		// Updates the normals of the contacts within the user data
+		userDataA->contacts[userDataB->owner].normal = Vec2(contact->GetManifold()->localNormal);
+		userDataB->contacts[userDataA->owner].normal = Vec2(contact->GetManifold()->localNormal);
+
+		// Sets grounded state of the entity on top
+		bool aOnTop = userDataA->owner->getPosition().y < userDataB->owner->getPosition().y;
+
+		if (aOnTop)
+			userDataA->grounded = true;
+
+		else
+			userDataB->grounded = true;
 	}
-
-	// Updates the normals of the contacts within the user data for userDataB
-	for (size_t i = 0; i < userDataB->contacts.size(); i++)
-	{
-		if (userDataB->contacts[i].collider == userDataA->owner)
-		{
-			userDataB->contacts[i].normal = Vec2(contact->GetManifold()->localNormal);
-			break;
-		}
-	}
-
-	// Sets grounded state of the entity on top
-	bool aOnTop = userDataA->owner->getPosition().y < userDataB->owner->getPosition().y;
-
-	if (aOnTop)
-		userDataA->grounded = true;
-
-	else
-		userDataB->grounded = true;
 }
 
 void Engine::ContactListener::PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
@@ -184,6 +160,9 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 
 	// I have no idea why this centres it onto the origin
 	moveView({ -1920 / 3, -1080 / 3 });
+
+	//
+	engineClock.restart();
 
 	// Calls the init controller function if it exists
 	if (this->controller != nullptr)
@@ -260,7 +239,13 @@ void Engine::render()
 
 	// Displays the render texture
 	windowRenderTexture.display();
-	
+
+	// Sets global shader uniforms
+
+	testShader.setUniform("time", engineClock.getElapsedTime().asSeconds());
+	testShader.setUniform("resolution", sf::Glsl::Vec2(window.getSize().x, window.getSize().y));
+
+	// Draws the render texture to the window
 	sf::RenderStates states;
 	states.texture = &windowRenderTexture.getTexture();
 	states.shader = &testShader;

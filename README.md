@@ -2,6 +2,7 @@
 
 ### Languages Used:
 * C++
+* GLSL
 
 ### Libraries Used:
 * Box2D

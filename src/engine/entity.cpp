@@ -83,12 +83,16 @@ PhysicalEntity::PhysicalEntity(bool call) : GraphicEntity(false)
 
 PhysicalEntity::~PhysicalEntity()
 {
-	// Deletes the user data from the body
-	delete reinterpret_cast<B2CustomUserData*>(body->GetUserData().pointer);
+	// Gets the user data before the body is deleted
+	B2CustomUserData* userData = reinterpret_cast<B2CustomUserData*>(getB2UserData());
 
 	// Deletes the body from the world
 	if (body != nullptr)
 		engineInstance->world->DestroyBody(body);
+
+	// Deletes the user data
+	if (userData != nullptr)
+		delete userData;
 }
 
 void PhysicalEntity::preStepUpdate()

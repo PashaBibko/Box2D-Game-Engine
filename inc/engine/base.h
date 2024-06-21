@@ -31,14 +31,13 @@ struct B2CustomUserData : public EngineSubClass
 	struct ContatctInfo
 	{
 		Vec2 normal;
-		Entity* collider = nullptr;
 	};
 
 	// Pointer to the owner of the body
 	Entity* owner;
 
 	// Vector of contact information
-	std::vector<ContatctInfo> contacts;
+	std::unordered_map<Entity*, ContatctInfo> contacts;
 
 	// Current gravity on the body
 	float gravityStrength = 0.0f;
@@ -244,6 +243,9 @@ class Engine
 
 		//
 		sf::VertexArray windowDisplayQuad;
+
+		//
+		sf::Clock engineClock;
 
 	public:
 		// b2World the game is simulating
