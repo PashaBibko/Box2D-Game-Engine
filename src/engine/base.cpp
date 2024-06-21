@@ -31,7 +31,7 @@ void EngineController::onUpdate()
 {
 	// Calls its onUpdate function
 	update();
-
+	
 	// Calls the onUpdate function of the child controller if it exists
 	if (childController != nullptr)
 		childController->onUpdate();
@@ -243,7 +243,7 @@ void Engine::render()
 	// Sets global shader uniforms
 
 	testShader.setUniform("time", engineClock.getElapsedTime().asSeconds());
-	testShader.setUniform("resolution", sf::Glsl::Vec2(window.getSize().x, window.getSize().y));
+	testShader.setUniform("resolution", sf::Glsl::Vec2((float)window.getSize().x, (float)window.getSize().y));
 
 	// Draws the render texture to the window
 	sf::RenderStates states;

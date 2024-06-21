@@ -8,6 +8,24 @@
 // Entity vector (Defined in class but has to be created here)
 std::vector<std::unique_ptr<Entity>> Entity::instances;
 
+//
+
+b2BodyType convertFromStr(const std::string& str)
+{
+	// Converts the string to a b2BodyType
+	if (str == "static")
+		return b2BodyType::b2_staticBody;
+
+	else if (str == "kinematic")
+		return b2BodyType::b2_kinematicBody;
+
+	else if (str == "dynamic")
+		return b2BodyType::b2_dynamicBody;
+
+	else
+		return b2BodyType::b2_staticBody;
+}
+
 // --------------- Entity Member Functions --------------- //
 
 Vec2 Entity::getSize()

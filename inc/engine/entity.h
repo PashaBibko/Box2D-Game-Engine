@@ -9,6 +9,9 @@
 // Foward declaration of the B2CustomUserData class
 struct B2CustomUserData;
 
+//
+b2BodyType convertFromStr(const std::string& str);
+
 /*
 * @brief Defintion class for GraphicEntity
 */

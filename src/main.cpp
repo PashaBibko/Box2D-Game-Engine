@@ -11,6 +11,8 @@ class CustomController : public EngineController
 
 		PhysicalEntity* player = nullptr;
 
+		LevelPtrs testLevel;
+
 	public:
 		void init() override
 		{
@@ -52,6 +54,8 @@ class CustomController : public EngineController
 			player = PhysicalEntity::create(p_def2);
 
 			//
+
+			testLevel = loadLevel("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/levels/exampleLevel.json");
 		}
 
 		void render() override
@@ -60,6 +64,11 @@ class CustomController : public EngineController
 			platform2->render();
 
 			player->render();
+
+			for (auto& entity : testLevel.graphicEntities)
+			{
+				entity->render();
+			}
 		}
 
 		void update() override
@@ -113,7 +122,7 @@ class CustomController : public EngineController
 int main()
 {
 	Engine instance(Vec2{ 1280, 720 }, std::make_unique<CustomController>());
-	instance.testShader.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/glsl/blur.frag", sf::Shader::Fragment);
+	//instance.testShader.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/glsl/blur.frag", sf::Shader::Fragment);
 
 	instance.addInputs(
 		sf::Keyboard::Left,
