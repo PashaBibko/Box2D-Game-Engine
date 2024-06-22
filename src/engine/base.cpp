@@ -47,6 +47,16 @@ void EngineController::onRender()
 		childController->onRender();
 }
 
+void EngineController::onClose()
+{
+	// Calls its onClose function
+	close();
+
+	// Calls the onClose function of the child controller if it exists
+	if (childController != nullptr)
+		childController->onClose();
+}
+
 // ----- Contact Listener Functions ----- //
 
 #ifndef GET_USER_DATA
@@ -171,6 +181,10 @@ Engine::Engine(Vec2 windowSize, std::unique_ptr<EngineController>controller, boo
 
 Engine::~Engine()
 {
+	// Calls the close controller function if it exists
+	if (controller != nullptr)
+		controller->onClose();
+
 	// Decrements the instance count
 	Engine::instanceCount--;
 

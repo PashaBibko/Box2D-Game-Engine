@@ -129,3 +129,65 @@ Level loadLevel(const std::string& levelPath)
 	// Returns the LevelPtrs
 	return loadLevel(def);
 }
+
+static void saveGraphicEntity(GraphicDef entityDef, nl::json& levelJson)
+{
+	// Creates a JSON object for the entity
+	nl::json entityJson;
+
+	// Sets the size and position of the entity
+	entityJson["size"] = entityDef.size;
+	entityJson["position"] = entityDef.position;
+
+	// Adds the entity to the level JSON
+	levelJson["graphicEntities"].push_back(entityJson);
+}
+
+static void savePhysicalEntity(PhysicalDef entityDef, nl::json& levelJson)
+{
+	// Creates a JSON object for the entity
+	nl::json entityJson;
+
+	// Sets the size and position of the entity
+	entityJson["size"] = entityDef.size;
+	entityJson["position"] = entityDef.position;
+
+	// Converts the bodyType to a string
+	entityJson["bodyType"] = convertToStr(entityDef.bodyType);
+
+	// Adds the hitboxes to the entity JSON
+	for (auto& hitbox : entityDef.fixtureVertices)
+	{
+		// Creates a JSON array for the hitbox
+		nl::json hitboxJson;
+
+		// Loops through each vertex in the hitbox
+		for (auto& vertex : hitbox)
+			hitboxJson.push_back(vertex);
+
+		// Adds the hitbox to the entity JSON
+		entityJson["hitboxes"].push_back(hitboxJson);
+	}
+
+	// Adds the entity to the level JSON
+	levelJson["physicalEntities"].push_back(entityJson);
+}
+
+void saveToJson(Level& level, const std::string& filePath)
+{
+	// Creates a JSON object
+	nl::json levelJson;
+
+	// Iterates through each graphic entity and saves it
+	for (GraphicEntity* entity : level.graphicEntities)
+		saveGraphicEntity(createDefOf(entity), levelJson);
+
+	// Iterates through each physical entity and saves it
+	for (PhysicalEntity* entity : level.physicalEntities)
+		savePhysicalEntity(createDefOf(entity), levelJson);
+
+	// Dumps the JSON object to the file
+	std::ofstream file(filePath);
+	file << levelJson.dump(-1);
+	file.close();
+}

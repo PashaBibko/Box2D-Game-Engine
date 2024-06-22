@@ -95,6 +95,11 @@ class CustomController : public EngineController
 				player = PhysicalEntity::create(newPlayerDef);
 			}
 		}
+
+		void close() override
+		{
+			saveToJson(testLevel, "C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/levels/exampleLevel.json");
+		}
 };
 
 int main()

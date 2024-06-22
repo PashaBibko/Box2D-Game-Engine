@@ -162,6 +162,11 @@ class EngineController : public EngineSubClass
 		*/
 		void onUpdate();
 
+		/*
+		* 
+		*/
+		void onClose();
+
 	public:
 		/*
 		* @brief Default constructor. Should never be called
@@ -187,6 +192,11 @@ class EngineController : public EngineSubClass
 		* @brief Virtual function called when the engine is updated
 		*/
 		virtual void update() {}
+
+		/*
+		* @brief Virtual function called when the engine is closed
+		*/
+		virtual void close() {}
 
 		// Child controller
 		std::unique_ptr<EngineController> childController;

@@ -46,3 +46,11 @@ Level loadLevel(const LevelDef& levelDef);
 * @return Pointers to all the entities in the level
 */
 Level loadLevel(const std::string& levelPath);
+
+/*
+* @brief Saves a LevelDef to a JSON file
+* 
+* @param levelDef The LevelDef to save
+* @param levelPath The path to the JSON file
+*/
+void saveToJson(Level& levelDef, const std::string& levelPath);
