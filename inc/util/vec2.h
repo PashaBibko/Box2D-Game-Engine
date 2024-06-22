@@ -23,6 +23,10 @@ struct Vec2
 	Vec2(sf::Vector2i vec) : x((float)vec.x), y((float)vec.y) {}
 	operator sf::Vector2i() { return sf::Vector2i((int)x, (int)y); }
 
+	// SFML conversion - sf::Vector2u
+	Vec2(sf::Vector2u vec) : x((float)vec.x), y((float)vec.y) {}
+	operator sf::Vector2u() { return sf::Vector2u((unsigned int)x, (unsigned int)y); }
+
 	// Box2D conversion - b2Vec2
 	Vec2 (b2Vec2 vec) : x(vec.x), y(vec.y) {}
 	operator b2Vec2() { return b2Vec2(x, y); }

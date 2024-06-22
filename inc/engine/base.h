@@ -58,6 +58,17 @@ enum class EntityType
 };
 
 /*
+*/
+enum class EditorState
+{
+	EDITING,
+	CREATING,
+	MOVING,
+
+	INACTIVE
+};
+
+/*
 * @brief Base polymorphic class for all entities
 */
 class Entity : public EngineSubClass
@@ -256,6 +267,9 @@ class Engine
 
 		//
 		sf::Clock engineClock;
+
+		//
+		EditorState editorState = EditorState::INACTIVE;
 
 	public:
 		// b2World the game is simulating

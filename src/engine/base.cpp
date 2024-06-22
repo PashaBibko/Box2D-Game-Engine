@@ -220,8 +220,66 @@ void Engine::update()
 
 	#define MIDPOINT 0 // Can change (no logical reason why it should not be 0)
 
-	callFuncOnMap(keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
-	callFuncOnMap(mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
+	// If LControl is not pressed, updates the keyMap and mouseMap
+	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl))
+	{
+		callFuncOnMap(keyMap, [](sf::Keyboard::Key key, long& value) { sf::Keyboard::isKeyPressed(key) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
+		callFuncOnMap(mouseMap, [](sf::Mouse::Button button, long& value) { sf::Mouse::isButtonPressed(button) ? ((value < MIDPOINT) ? value = MIDPOINT : value++) : ((value > MIDPOINT) ? value = MIDPOINT : value--); });
+	}
+
+	// Sets the editor state based on the number keys
+	else
+	{
+		EditorState oldState = editorState;
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num0))
+			editorState = EditorState::INACTIVE;
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num1))
+			editorState = EditorState::EDITING;
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num2))
+			editorState = EditorState::CREATING;
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num3))
+			editorState = EditorState::MOVING;
+
+		//
+
+		if (oldState != editorState)
+		{
+			#define EDITOR_SIZE 350
+
+			if (oldState == EditorState::INACTIVE && editorState != EditorState::INACTIVE)
+			{
+				Vec2 oldWindowSize = window.getSize();
+				oldWindowSize.x = oldWindowSize.x + EDITOR_SIZE;
+				window.setSize(oldWindowSize);
+
+				sf::View oldView = window.getView();
+				Vec2 oldViewSize = oldView.getSize();
+				oldViewSize.x = oldViewSize.x + EDITOR_SIZE;
+				oldView.setCenter(oldView.getCenter().x + EDITOR_SIZE / 2, oldView.getCenter().y);
+				oldView.setSize(oldViewSize);
+				window.setView(oldView);
+			}
+
+			if (oldState != EditorState::INACTIVE && editorState == EditorState::INACTIVE)
+			{
+				Vec2 oldWindowSize = window.getSize();
+				oldWindowSize.x = oldWindowSize.x - EDITOR_SIZE;
+				window.setSize(oldWindowSize);
+
+				sf::View oldView = window.getView();
+				Vec2 oldViewSize = oldView.getSize();
+				Vec2 oldViewCenter = oldView.getCenter();
+				oldViewSize.x = oldViewSize.x - EDITOR_SIZE;
+				oldView.setCenter(oldViewCenter.x - EDITOR_SIZE / 2, oldViewCenter.y);
+				oldView.setSize(oldViewSize);
+				window.setView(oldView);
+			}
+		}
+	}
 
 	// Calls all Entity::preStepUpdate functions
 	for (std::unique_ptr<Entity>& entity : Entity::instances)
@@ -242,7 +300,7 @@ void Engine::update()
 void Engine::render()
 {
 	// Clears the window
-	window.clear();
+	window.clear(sf::Color::Black);
 
 	// Clears the render texture
 	windowRenderTexture.clear();
@@ -265,6 +323,53 @@ void Engine::render()
 	states.shader = &testShader;
 
 	window.draw(windowDisplayQuad, states);
+
+	//
+	if (editorState != EditorState::INACTIVE)
+	{
+		sf::RectangleShape divider;
+		divider.setSize({ 8, (float)window.getSize().y });
+		divider.setFillColor(sf::Color::Black);
+		divider.setOutlineColor(sf::Color::White);
+		divider.setOutlineThickness(1);
+		divider.setPosition(windowDisplayQuad[1].position.x + 1, 0);
+
+		window.draw(divider);
+
+		//
+
+		sf::Font font;
+		font.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/res/fonts/BlockFont.ttf");
+
+		sf::Text editorInfoText;
+		editorInfoText.setFont(font);
+		editorInfoText.setCharacterSize(24);
+		editorInfoText.setFillColor(sf::Color::White);
+
+		std::string editorInfoString = "Editor State: ";
+
+		switch (editorState)
+		{
+			case EditorState::EDITING:
+				editorInfoString += "Editing";
+				break;
+
+			case EditorState::CREATING:
+				editorInfoString += "Creating";
+				break;
+
+			case EditorState::MOVING:
+				editorInfoString += "Moving";
+				break;
+		}
+
+		editorInfoText.setString(editorInfoString);
+
+		editorInfoText.setPosition(windowDisplayQuad[1].position.x + 10, 10);
+
+		window.draw(editorInfoText);
+
+	}
 
 	// Displays the window
 	window.display();
@@ -299,6 +404,10 @@ long Engine::getInputInfo(sf::Mouse::Button button)
 
 void Engine::addInput(sf::Keyboard::Key key)
 {
+	// Throws an error if the key is LControl (as it is used for the debug console)
+	if (key == sf::Keyboard::Key::LControl)
+		throw std::runtime_error("Cannot add LControl to keyMap");
+
 	// Adds the key to the keyMap if it is not already in it
 	if (!inMap(keyMap, key))
 	{
