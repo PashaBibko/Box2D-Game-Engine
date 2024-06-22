@@ -6,37 +6,13 @@
 class CustomController : public EngineController
 {
 	private:
-		Entity* platform1 = nullptr;
-		Entity* platform2 = nullptr;
-
 		PhysicalEntity* player = nullptr;
 
-		LevelPtrs testLevel;
+		Level testLevel;
 
 	public:
 		void init() override
 		{
-			PhysicalDef p_def1;
-			p_def1.size = Vec2{400 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter };
-			p_def1.position = Vec2{400 / engineInstance->pxToMeter, 500 / engineInstance->pxToMeter };
-
-			p_def1.fixtureVertices.resize(1);
-
-			p_def1.fixtureVertices[0] = {
-				Vec2{-400 / engineInstance->pxToMeter, -50 / engineInstance->pxToMeter},
-				Vec2{400 / engineInstance->pxToMeter, -50 / engineInstance->pxToMeter},
-				Vec2{400 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter},
-				Vec2{-400 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter}
-			};
-			
-			platform1 = PhysicalEntity::create(p_def1);
-
-			p_def1.position = Vec2{400 / engineInstance->pxToMeter, 0};
-
-			platform2 = PhysicalEntity::create(p_def1);
-
-			//
-
 			PhysicalDef p_def2;
 			p_def2.size = Vec2{50 / engineInstance->pxToMeter, 50 / engineInstance->pxToMeter };
 			p_def2.position = Vec2{400 / engineInstance->pxToMeter, 250 / engineInstance->pxToMeter };
@@ -60,12 +36,14 @@ class CustomController : public EngineController
 
 		void render() override
 		{
-			platform1->render();
-			platform2->render();
-
 			player->render();
 
 			for (auto& entity : testLevel.graphicEntities)
+			{
+				entity->render();
+			}
+
+			for (auto& entity : testLevel.physicalEntities)
 			{
 				entity->render();
 			}
