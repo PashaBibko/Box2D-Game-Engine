@@ -57,17 +57,17 @@ struct Vec2
 
 // Addition operator overload
 
-Vec2 operator+(Vec2& lhs, const Vec2& rhs);
+Vec2 operator+(Vec2& lhs, Vec2& rhs);
 
-Vec2 operator-(Vec2& lhs, const Vec2& rhs);
+Vec2 operator-(Vec2& lhs, Vec2& rhs);
 
-Vec2 operator*(Vec2& lhs, const Vec2& rhs);
+Vec2 operator*(Vec2& lhs, Vec2& rhs);
 
-Vec2 operator/(Vec2& lhs, const Vec2& rhs);
+Vec2 operator/(Vec2& lhs, Vec2& rhs);
 
-bool operator==(Vec2& lhs, const Vec2& rhs);
+bool operator==(Vec2& lhs, Vec2& rhs);
 
-bool operator!=(Vec2& lhs, const Vec2& rhs);
+bool operator!=(Vec2& lhs, Vec2& rhs);
 
 // STD operator overloads
 

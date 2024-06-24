@@ -103,6 +103,9 @@ class Entity : public EngineSubClass
 		// Render states of the entity (set automatically)
 		sf::RenderStates renderStates;
 
+		//
+		bool selectedByEditor = false;
+
 	public:
 		/*
 		*/
@@ -247,6 +250,49 @@ class Engine
 		// Instance of the contact listener
 		ContactListener contactListenerInstance;
 
+		/*
+		*/
+		class PointQueryCallback : public b2QueryCallback
+		{
+			private:
+				Vec2 point;
+				std::vector<b2Fixture*> fixtures;
+
+			public:
+				PointQueryCallback(Vec2 point) : point(point) {}
+
+				bool ReportFixture(b2Fixture* fixture) override
+				{
+					if (fixture->TestPoint(point))
+						fixtures.push_back(fixture);
+
+					return true;
+				}
+
+				std::vector<b2Fixture*> getFixtures() { return fixtures; }
+		};
+
+		std::vector<Entity*> QueryPoint(b2World* world, Vec2 point)
+		{
+			PointQueryCallback callback(point);
+
+			b2AABB aabb;
+			aabb.lowerBound = point - Vec2(0.001f, 0.001f);
+			aabb.upperBound = point + Vec2(0.001f, 0.001f);
+
+			world->QueryAABB(&callback, aabb);
+
+			std::vector<Entity*> entities;
+
+			for (b2Fixture* fixture : callback.getFixtures())
+			{
+				B2CustomUserData* userData = reinterpret_cast<B2CustomUserData*>(fixture->GetBody()->GetUserData().pointer);
+				entities.push_back(userData->owner);
+			}
+
+			return entities;
+		}
+
 		// Position of the mouse
 		Vec2 mousePos;
 
@@ -270,6 +316,12 @@ class Engine
 
 		//
 		EditorState editorState = EditorState::INACTIVE;
+
+		//
+		Entity* editorSelectedEntity = nullptr;
+
+		//
+		std::vector<Entity*> possibleEditorEntities;
 
 	public:
 		// b2World the game is simulating

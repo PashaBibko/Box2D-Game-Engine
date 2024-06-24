@@ -55,6 +55,9 @@ class drawRect : public sf::Drawable
 		*/
 		Vec2 getPosition();
 
+		/**/
+		void setColor(sf::Color color);
+
 		/*
 		* @brief Draws the rectangle
 		* 

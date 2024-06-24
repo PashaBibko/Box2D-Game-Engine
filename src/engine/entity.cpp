@@ -97,6 +97,13 @@ GraphicEntity::GraphicEntity(bool call)
 
 void GraphicEntity::render()
 {
+	//
+	if (selectedByEditor)
+		drawable.setColor(sf::Color::Magenta);
+
+	else
+		drawable.setColor(sf::Color::White);
+
 	// Renders the drawable object to the Engine window
 	engineInstance->draw(drawable, renderStates);
 }
@@ -163,6 +170,13 @@ void PhysicalEntity::postStepUpdate()
 
 void PhysicalEntity::render()
 {
+	//
+	if (selectedByEditor)
+		drawable.setColor(sf::Color::Magenta);
+
+	else
+		drawable.setColor(sf::Color::White);
+
 	// Renders the drawable object to the Engine window
 	engineInstance->draw(drawable, renderStates);
 

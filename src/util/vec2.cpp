@@ -6,7 +6,7 @@
 
 // Addition operator overload
 
-Vec2 operator+(Vec2& lhs, const Vec2& rhs)
+Vec2 operator+(Vec2& lhs, Vec2& rhs)
 {
 	lhs.x = lhs.x + rhs.x;
 	lhs.y = lhs.y + rhs.y;
@@ -16,7 +16,7 @@ Vec2 operator+(Vec2& lhs, const Vec2& rhs)
 
 // Subtraction operator overload
 
-Vec2 operator-(Vec2& lhs, const Vec2& rhs)
+Vec2 operator-(Vec2& lhs, Vec2& rhs)
 {
 	lhs.x = lhs.x - rhs.x;
 	lhs.y = lhs.y - rhs.y;
@@ -26,7 +26,7 @@ Vec2 operator-(Vec2& lhs, const Vec2& rhs)
 
 // Multiplication operator overload
 
-Vec2 operator*(Vec2& lhs, const Vec2& rhs)
+Vec2 operator*(Vec2& lhs, Vec2& rhs)
 {
 	lhs.x = lhs.x * rhs.x;
 	lhs.y = lhs.y * rhs.y;
@@ -36,7 +36,7 @@ Vec2 operator*(Vec2& lhs, const Vec2& rhs)
 
 // Division operator overload
 
-Vec2 operator/(Vec2& lhs, const Vec2& rhs)
+Vec2 operator/(Vec2& lhs, Vec2& rhs)
 {
 	lhs.x = lhs.x / rhs.x;
 	lhs.y = lhs.y / rhs.y;
@@ -46,14 +46,14 @@ Vec2 operator/(Vec2& lhs, const Vec2& rhs)
 
 // Equality operator overload
 
-bool operator==(Vec2& lhs, const Vec2& rhs)
+bool operator==(Vec2& lhs, Vec2& rhs)
 {
 	return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 
 // Inequality operator overload
 
-bool operator!=(Vec2& lhs, const Vec2& rhs)
+bool operator!=(Vec2& lhs, Vec2& rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
 }

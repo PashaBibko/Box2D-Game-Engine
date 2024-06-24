@@ -51,6 +51,15 @@ Vec2 drawRect::getPosition()
 	return position;
 }
 
+void drawRect::setColor(sf::Color color)
+{
+	// Set the color of the rectangle
+	for (int i = 0; i < 4; i++)
+	{
+		vertices[i].color = color;
+	}
+}
+
 void drawRect::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	// Draw the rectangle

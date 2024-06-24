@@ -209,12 +209,28 @@ void Engine::update()
 			case sf::Event::Closed:
 				window.close();
 				break;
-
-			case sf::Event::MouseMoved:
-				mousePos = window.mapPixelToCoords({ event.mouseMove.x, event.mouseMove.y });
-				break;
 		}
 	}
+
+	// Updates the mouse position
+
+	Vec2 pixelMousePos = sf::Mouse::getPosition(window);
+	Vec2 windowMousePos = window.mapPixelToCoords(pixelMousePos);
+
+	// Converts the mouse position to the position of the render texture
+
+	Vec2 size = window.getSize();
+
+	if (editorState != EditorState::INACTIVE)
+		size.x -= 400;
+
+	Vec2 renderTexturePixel;
+	renderTexturePixel.x = windowMousePos.x / size.x * windowRenderTexture.getSize().x;
+	renderTexturePixel.y = windowMousePos.y / size.y * windowRenderTexture.getSize().y;
+
+	Vec2 renderTextureMousePos = windowRenderTexture.mapPixelToCoords(renderTexturePixel);
+	mousePos = renderTextureMousePos;
+
 
 	// Updates the keyMap and mouseMap
 
@@ -248,7 +264,7 @@ void Engine::update()
 
 		if (oldState != editorState)
 		{
-			#define EDITOR_SIZE 350
+			#define EDITOR_SIZE 400
 
 			if (oldState == EditorState::INACTIVE && editorState != EditorState::INACTIVE)
 			{
@@ -277,6 +293,30 @@ void Engine::update()
 				oldView.setCenter(oldViewCenter.x - EDITOR_SIZE / 2, oldViewCenter.y);
 				oldView.setSize(oldViewSize);
 				window.setView(oldView);
+			}
+		}
+
+		if (editorState != EditorState::INACTIVE)
+		{
+
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+			{
+				if (editorSelectedEntity != nullptr)
+					editorSelectedEntity->selectedByEditor = false;
+
+				possibleEditorEntities.clear();
+
+				Vec2 m = { mousePos.x / pxToMeter, mousePos.y / pxToMeter };
+
+				possibleEditorEntities = QueryPoint(world, m);
+
+				std::cout << "Possible Entities: " << possibleEditorEntities.size() << std::endl;
+				std::cout << "Mouse Pos: " << m.x << ", " << m.y << std::endl;
+
+				editorSelectedEntity = possibleEditorEntities.size() == 0 ? nullptr : possibleEditorEntities[0];
+
+				if (editorSelectedEntity != nullptr)
+					editorSelectedEntity->selectedByEditor = true;
 			}
 		}
 	}
@@ -338,18 +378,20 @@ void Engine::render()
 
 		//
 
-		sf::Font font;
-		font.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/res/fonts/BlockFont.ttf");
-
-		sf::Text editorInfoText;
-		editorInfoText.setFont(font);
-		editorInfoText.setCharacterSize(24);
-		editorInfoText.setFillColor(sf::Color::White);
-
-		std::string editorInfoString = "Editor State: ";
-
-		switch (editorState)
+		if (editorState != EditorState::INACTIVE)
 		{
+			sf::Font font;
+			font.loadFromFile("C:/Users/Pasha/source/github-repos/Box2D-Game-Engine/res/fonts/BlockFont.ttf");
+
+			sf::Text editorInfoText;
+			editorInfoText.setFont(font);
+			editorInfoText.setCharacterSize(24);
+			editorInfoText.setFillColor(sf::Color::White);
+
+			std::string editorInfoString = "Editor State: ";
+
+			switch (editorState)
+			{
 			case EditorState::EDITING:
 				editorInfoString += "Editing";
 				break;
@@ -361,13 +403,37 @@ void Engine::render()
 			case EditorState::MOVING:
 				editorInfoString += "Moving";
 				break;
+			}
+
+			editorInfoString += "\nEntity Type: ";
+
+			if (editorSelectedEntity == nullptr)
+				editorInfoString += "None";
+
+			else
+			{
+				if (editorSelectedEntity->type == EntityType::GRAPHIC_ONLY)
+					editorInfoString += "Graphic";
+
+				else if (editorSelectedEntity->type == EntityType::GRAPHIC_PHYSICAL)
+					editorInfoString += "Physical";
+			}
+
+			editorInfoText.setString(editorInfoString);
+
+			editorInfoText.setPosition(windowDisplayQuad[1].position.x + 20, 10);
+
+			window.draw(editorInfoText);
+
+			sf::RectangleShape editorInfoBoxDivider;
+			editorInfoBoxDivider.setSize({ (float)window.getSize().x - windowDisplayQuad[1].position.x - 20, 8 });
+			editorInfoBoxDivider.setFillColor(sf::Color::Black);
+			editorInfoBoxDivider.setOutlineColor(sf::Color::White);
+			editorInfoBoxDivider.setOutlineThickness(1);
+			editorInfoBoxDivider.setPosition(windowDisplayQuad[1].position.x + 10, 70);
+
+			window.draw(editorInfoBoxDivider);
 		}
-
-		editorInfoText.setString(editorInfoString);
-
-		editorInfoText.setPosition(windowDisplayQuad[1].position.x + 10, 10);
-
-		window.draw(editorInfoText);
 
 	}
 
